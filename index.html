@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIELATO - Temporada 2026-2027</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a1208; color: #d4e8c2; font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+.nav { background: #0a1a0c; border-bottom: 1px solid #1a3020; display: flex; overflow-x: auto; padding: 0 16px; }
+.nav button { background: transparent; border: none; border-bottom: 2px solid transparent; color: #3a6a3a; padding: 11px 16px; font-size: 13px; white-space: nowrap; }
+.nav button.active { border-bottom-color: #4caf70; color: #7ee8a2; font-weight: 700; }
+.main { padding: 18px 16px; max-width: 1300px; margin: 0 auto; }
+.card { background: #0d1a10; border: 1px solid #1a3020; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.btn { background: #1e4d33; border: 1px solid #3d8a5f; color: #e8f5e2; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; }
+.input { background: #0a1208; border: 1px solid #1e3828; color: #d4e8c2; border-radius: 8px; padding: 9px 14px; font-size: 13px; outline: none; width: 100%; }
+.badge { border-radius: 4px; padding: 1px 6px; font-size: 10px; font-weight: 700; }
+.badge-SOCIO { background: #1e4d33; color: #7ee8a2; border: 1px solid #2d6a4f; }
+.badge-INVITADO { background: #1e3a4d; color: #7eb8e8; border: 1px solid #2d5a6a; }
+.badge-MENOR { background: #4d3a1e; color: #e8c27e; border: 1px solid #6a522d; }
+.badge-ZP { background: #3a1e4d; color: #c27ee8; border: 1px solid #5a2d6a; }
+.mes-btn { border-radius: 20px; padding: 6px 14px; font-size: 12px; border: 1px solid #1a3020; background: #0d1a10; color: #4a7a5a; margin: 0 4px 4px 0; }
+.mes-btn.active { background: #1e4d33; border-color: #3d8a5f; color: #e8f5e2; }
+.check-btn { width: 32px; height: 32px; border-radius: 8px; border: 2px solid #1a3020; background: #0d1a10; color: #1e3828; font-size: 16px; display: inline-flex; align-items: center; justify-content: center; }
+.check-btn.on { border-color: #3d8a5f; background: #1e4d33; color: #4caf70; }
+table { border-collapse: collapse; width: 100%; font-size: 11px; }
+th { padding: 6px 5px; background: #060e08; color: #3a6a3a; font-weight: 600; font-size: 10px; border: 1px solid #111a11; white-space: nowrap; text-align: center; }
+td { padding: 5px; border: 1px solid #111a11; text-align: center; }
+.overflow-x { overflow-x: auto; border-radius: 10px; border: 1px solid #1a3020; margin-bottom: 20px; }
+.grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 10px; margin-top: 20px; }
+.stat-card { background: #0d1a10; border: 1px solid #1a3020; border-radius: 10px; padding: 14px 16px; }
+.pieza-btn { width: 28px; height: 28px; border-radius: 6px; font-size: 16px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.turno-jab { background: #1a1208; border: 2px solid #e8a84a; border-radius: 10px; padding: 12px 16px; }
+.turno-cor { background: #0a1220; border: 2px solid #a8d8e8; border-radius: 10px; padding: 12px 16px; }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="screen-loading" style="min-height:100vh;background:#0a1208;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <div style="font-size:48px">&#127995;</div>
+  <div style="color:#4caf70;font-size:16px;font-weight:700">FIELATO</div>
+  <div style="color:#3a6a3a;font-size:13px">Conectando con Google Sheets...</div>
+</div>
+
+<!-- ERROR -->
+<div id="screen-error" style="display:none;min-height:100vh;background:#0a0808;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center">
+  <div style="font-size:48px;margin-bottom:16px">&#9888;</div>
+  <div style="color:#e87a7a;font-size:18px;font-weight:700;margin-bottom:8px">Error de conexion</div>
+  <div id="error-msg" style="color:#a85a5a;font-size:13px;margin-bottom:24px;max-width:320px"></div>
+  <button class="btn" onclick="init()">Reintentar</button>
+</div>
+
+<!-- INICIO -->
+<div id="screen-inicio" style="display:none;min-height:100vh;background:#0a1208;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+  <div style="text-align:center;margin-bottom:40px">
+    <div style="font-size:64px;margin-bottom:12px">&#127995;</div>
+    <h1 style="font-size:38px;font-weight:800;color:#e8f5e2;letter-spacing:-1px">FIELATO</h1>
+    <div style="color:#4caf70;font-size:15px;letter-spacing:4px;margin-top:6px;text-transform:uppercase">Temporada 2026-2027</div>
+    <div style="margin-top:10px;background:#0d2a14;border:1px solid #1e4a28;border-radius:8px;padding:6px 14px;font-size:12px;color:#4caf70;display:inline-block">&#10003; Conectado con Google Sheets</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:16px;width:100%;max-width:320px">
+    <button onclick="showSocio()" style="background:linear-gradient(135deg,#1e4d33,#2d6a4f);border:1px solid #3d8a5f;color:#e8f5e2;border-radius:14px;padding:20px 28px;font-size:17px;font-weight:700;text-align:left;display:flex;align-items:center;gap:16px">
+      <span style="font-size:32px">&#128100;</span>
+      <div><div>Soy Socio</div><div style="font-size:12px;color:#7ee8a2;font-weight:400;margin-top:2px">Ver mis asistencias y piezas</div></div>
+    </button>
+    <button onclick="showAdmin()" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #2a2a5a;color:#c8c8f0;border-radius:14px;padding:20px 28px;font-size:17px;font-weight:700;text-align:left;display:flex;align-items:center;gap:16px">
+      <span style="font-size:32px">&#128272;</span>
+      <div><div>Panel Admin</div><div style="font-size:12px;color:#8888cc;font-weight:400;margin-top:2px">Gestion completa</div></div>
+    </button>
+  </div>
+</div>
+
+<!-- SOCIO -->
+<div id="screen-socio" style="display:none">
+  <div style="background:#0d1a10;border-bottom:1px solid #1a3020;padding:14px 20px;display:flex;align-items:center;gap:14px">
+    <button onclick="showScreen('screen-inicio')" style="background:none;border:none;color:#4caf70;font-size:22px">&#8592;</button>
+    <div>
+      <div style="font-size:11px;color:#4caf70;letter-spacing:3px;text-transform:uppercase">Fielato 2026-2027</div>
+      <div style="font-size:18px;font-weight:700;color:#e8f5e2">Mi Asistencia</div>
+    </div>
+  </div>
+  <div style="padding:16px;max-width:700px;margin:0 auto">
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button onclick="socioTab('grupos')" id="stab-grupos" style="flex:1;background:#1e4d33;border:1px solid #3d8a5f;color:#e8f5e2;border-radius:8px;padding:8px;font-size:13px;font-weight:600">Grupos</button>
+      <button onclick="socioTab('ranking')" id="stab-ranking" style="flex:1;background:#0d1a10;border:1px solid #1a3020;color:#4a7a5a;border-radius:8px;padding:8px;font-size:13px">Ranking</button>
+      <button onclick="socioTab('buscar')" id="stab-buscar" style="flex:1;background:#0d1a10;border:1px solid #1a3020;color:#4a7a5a;border-radius:8px;padding:8px;font-size:13px">Mi ficha</button>
+    </div>
+    <div id="socio-tab-content"></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="screen-admin" style="display:none">
+  <div id="admin-pin-view" style="min-height:100vh;background:#080810;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;position:relative">
+    <button onclick="showScreen('screen-inicio')" style="position:absolute;top:20px;left:20px;background:none;border:none;color:#6666aa;font-size:22px">&#8592;</button>
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-size:48px;margin-bottom:10px">&#128272;</div>
+      <div style="font-size:22px;font-weight:700;color:#c8c8f0">Panel Admin</div>
+    </div>
+    <div style="background:#0d0d1a;border:1px solid #2a2a5a;border-radius:16px;padding:28px;width:100%;max-width:300px">
+      <div style="margin-bottom:16px;color:#8888cc;font-size:14px">PIN de administrador</div>
+      <input id="pin-input" type="password" placeholder="PIN" maxlength="8" onkeydown="if(event.key==='Enter')loginAdmin()"
+        style="width:100%;background:#080810;border:1px solid #2a2a5a;color:#c8c8f0;border-radius:10px;padding:13px 16px;font-size:18px;letter-spacing:6px;text-align:center;outline:none;margin-bottom:14px;font-family:inherit">
+      <div id="pin-error" style="color:#e87a7a;font-size:13px;margin-bottom:10px;text-align:center;display:none">PIN incorrecto</div>
+      <button onclick="loginAdmin()" style="width:100%;background:linear-gradient(135deg,#2a2a6a,#1a1a4a);border:1px solid #3a3a8a;color:#c8c8f0;border-radius:10px;padding:13px;font-size:15px;font-weight:700">Entrar</button>
+    </div>
+  </div>
+  <div id="admin-panel-view" style="display:none">
+    <div style="background:#0a1a0c;border-bottom:2px solid #1a3a1e;padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <button onclick="showScreen('screen-inicio')" style="background:none;border:none;color:#4caf70;font-size:22px">&#8592;</button>
+      <div style="flex:1">
+        <div style="font-size:10px;color:#3a8a4a;letter-spacing:3px;text-transform:uppercase">Admin Fielato 2026-2027</div>
+        <div style="font-size:17px;font-weight:700;color:#e8f5e2">Panel de Gestion</div>
+      </div>
+      <span id="saving-indicator" style="display:none;color:#4caf70;font-size:12px">Guardando...</span>
+      <button onclick="init()" style="background:#0d1a10;border:1px solid #1a3020;color:#4a7a5a;border-radius:8px;padding:5px 12px;font-size:12px">Recargar</button>
+    </div>
+    <div class="nav">
+      <button class="active" onclick="showTab('asistencia',this)">Asistencia</button>
+      <button onclick="showTab('piezas',this)">Piezas</button>
+      <button onclick="showTab('grupos',this)">Grupos Piezas</button>
+      <button onclick="showTab('calendario',this)">Calendario</button>
+      <button onclick="showTab('miembros',this)">Miembros</button>
+      <button onclick="showTab('tarjetas',this)">Tarjetas Leizarán</button>
+      <button onclick="showTab('tabla',this)">Tabla</button>
+    </div>
+    <div class="main">
+      <div id="tab-asistencia"></div>
+      <div id="tab-piezas" style="display:none"></div>
+      <div id="tab-grupos" style="display:none"></div>
+      <div id="tab-calendario" style="display:none"></div>
+      <div id="tab-miembros" style="display:none"></div>
+      <div id="tab-tarjetas" style="display:none"></div>
+      <div id="tab-tabla" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvuXnIEF-cUMV54zqp-5NCfUxRVVbDb8mp7b66uUAvnDlowPpSnLuJ4cXC7s65U3C5Jg/exec";
+const PIN = "1234";
+
+const MESES = [
+  {id:"sep",label:"Setiembre",eu:"Iraila",abbr:"SEP"},
+  {id:"oct",label:"Octubre",eu:"Urria",abbr:"OCT"},
+  {id:"nov",label:"Noviembre",eu:"Azaroa",abbr:"NOV"},
+  {id:"dic",label:"Diciembre",eu:"Abendua",abbr:"DIC"},
+  {id:"ene",label:"Enero",eu:"Urtarrila",abbr:"ENE"},
+  {id:"feb",label:"Febrero",eu:"Otsaila",abbr:"FEB"},
+  {id:"mar",label:"Marzo",eu:"Martxoa",abbr:"MAR"},
+  {id:"jul",label:"Julio",eu:"Julio",abbr:"JUL"},
+];
+
+const GRUPOS = ["1","2","3","4","5/6","7"];
+const CUOTA = {"1":[2,2],"2":[2,2],"3":[2,2],"4":[1,1],"5/6":[3,3],"7":[2,2]};
+const ORDEN_JAB = ["1","2","3","4","5/6","7"];
+const ORDEN_COR = ["7","5/6","4","3","2","1"];
+
+const WEEKENDS = {
+  sep:{"2026-09-05":true,"2026-09-06":true,"2026-09-12":true,"2026-09-13":true,"2026-09-19":true,"2026-09-20":true,"2026-09-26":true,"2026-09-27":true},
+  oct:{"2026-10-03":true,"2026-10-04":true,"2026-10-10":true,"2026-10-11":true,"2026-10-17":true,"2026-10-18":true,"2026-10-24":true,"2026-10-25":true,"2026-10-31":true},
+  nov:{"2026-11-01":true,"2026-11-07":true,"2026-11-08":true,"2026-11-14":true,"2026-11-15":true,"2026-11-21":true,"2026-11-22":true,"2026-11-28":true,"2026-11-29":true},
+  dic:{"2026-12-05":true,"2026-12-06":true,"2026-12-12":true,"2026-12-13":true,"2026-12-19":true,"2026-12-20":true,"2026-12-26":true,"2026-12-27":true},
+  ene:{"2027-01-02":true,"2027-01-03":true,"2027-01-09":true,"2027-01-10":true,"2027-01-16":true,"2027-01-17":true,"2027-01-23":true,"2027-01-24":true,"2027-01-30":true,"2027-01-31":true},
+  feb:{"2027-02-06":true,"2027-02-07":true,"2027-02-13":true,"2027-02-14":true,"2027-02-20":true,"2027-02-21":true,"2027-02-27":true,"2027-02-28":true},
+  mar:{"2027-03-06":true,"2027-03-07":true,"2027-03-13":true,"2027-03-14":true,"2027-03-20":true,"2027-03-21":true,"2027-03-27":true,"2027-03-28":true},
+  jul:{}
+};
+
+let miembros = [], calendario = JSON.parse(JSON.stringify(WEEKENDS));
+let cuotaBase = 750, cuotaFija = 75;
+let mesActivo = "sep", mesActivo2 = "sep", mesCal = "sep";
+let fechaActiva = null, filtroTipo = "TODOS", filtroMiembro = "TODOS";
+let repartos = [], tarjetas = {}, socioTabActual = "grupos";
+let socioSeleccionado = null, grupoExpandido = null;
+let tarjetaBuscadorAbierto = null;
+let propuestaPendiente = [];
+
+// ── SHEETS API ──
+function cleanDate(f) { if(!f)return f; return String(f).length>10?String(f).substring(0,10):String(f); }
+
+async function sheetRead(range) {
+  const sheet = range.split("!")[0];
+  const res = await fetch(SCRIPT_URL + "?action=read&sheet=" + encodeURIComponent(sheet));
+  if (!res.ok) throw new Error("Error " + res.status);
+  const d = await res.json();
+  if (d && d.error) throw new Error(d.error);
+  return d || [];
+}
+
+async function sheetWrite(range, values) {
+  const sheet = range.split("!")[0];
+  const fd = new FormData();
+  fd.append("action", "write");
+  fd.append("sheet", sheet);
+  fd.append("values", JSON.stringify(values));
+  const res = await fetch(SCRIPT_URL, {method:"POST", body:fd});
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const t = await res.text();
+  try { const d = JSON.parse(t); if (d && d.error) throw new Error(d.error); } catch(e) {}
+}
+
+// ── HELPERS ──
+function totalBatidas() {
+  return Object.entries(calendario).reduce((s,[mes,m])=>mes==="jul"?s:s+Object.keys(m).length,0);
+}
+
+function calcStats(m) {
+  const total = totalBatidas();
+  let dias = 0;
+  Object.entries(m.batidas||{}).forEach(([mes,fechas])=>{
+    if(mes==="jul") return;
+    Object.entries(fechas||{}).forEach(([fecha,val])=>{
+      if(val && calendario[mes] && calendario[mes][fecha]) dias++;
+    });
+  });
+  const pct = total>0?(dias/total)*100:0;
+  const limp = (pct/100)*5;
+  const jul = Object.entries((m.batidas&&m.batidas.jul)||{}).filter(([f,v])=>v&&calendario.jul&&calendario.jul[f]).length;
+  let jab=0, cor=0;
+  Object.values(m.piezas||{}).forEach(mes=>Object.values(mes).forEach(p=>{jab+=(p&&p.jabali)||0;cor+=(p&&p.corzo)||0;}));
+  return {dias,pct,limp,jul,jab,cor};
+}
+
+function diaAbr(f) {
+  try{const c=cleanDate(f);return["Do","Lu","Ma","Mi","Ju","Vi","Sa"][new Date(c+"T12:00:00").getDay()];}catch(e){return"";}
+}
+
+function badge(tipo) {
+  const cls=tipo==="Z/P"?"ZP":tipo;
+  return '<span class="badge badge-'+cls+'">'+tipo+'</span>';
+}
+
+function saving(on) { 
+  document.getElementById("saving-indicator").style.display=on?"inline":"none"; 
+}
+let _saveTimer = null;
+let _hayPendientes = false;
+function withSave(fn) {
+  _hayPendientes = true;
+  clearTimeout(_saveTimer);
+  saving(true);
+  // Capture the save function name for debugging
+  const savedFn = fn;
+  _saveTimer = setTimeout(async () => {
+    try { 
+      await savedFn(); 
+      _hayPendientes = false;
+      // Show brief confirmation
+      const ind = document.getElementById("saving-indicator");
+      if(ind) { ind.textContent="✓ Guardado"; ind.style.display="inline"; setTimeout(()=>{ind.textContent="Guardando...";ind.style.display="none";},1500); }
+    } catch(e) { 
+      console.error(e);
+      alert("Error al guardar: " + e.message);
+    }
+    finally { saving(false); }
+  }, 1500);
+}
+window.addEventListener('beforeunload', function(e) {
+  if(_hayPendientes) { e.preventDefault(); e.returnValue = ''; return ''; }
+});
+
+function mesesBtns(active, fn) {
+  return MESES.map(m=>{
+    const cnt=Object.keys(calendario[m.id]||{}).length;
+    return '<button class="mes-btn'+(m.id===active?" active":"")+'" onclick="'+fn+'(\''+m.id+'\')">'+m.label+(cnt>0?'<span style="background:#2d6a4f;color:#a8f0b8;border-radius:10px;padding:0 5px;font-size:10px;margin-left:4px">'+cnt+'</span>':"")+' </button>';
+  }).join("");
+}
+
+function calcularTurno(repartosList) {
+  const jab={}, cor={};
+  GRUPOS.forEach(g=>{jab[g]=0;cor[g]=0;});
+  repartosList.forEach(r=>{
+    const esp=String(r.especie||"").toLowerCase(), grp=String(r.grupo||"");
+    if(esp==="jabali"&&jab[grp]!==undefined) jab[grp]++;
+    if(esp==="corzo"&&cor[grp]!==undefined) cor[grp]++;
+  });
+  const totalJab=repartosList.filter(r=>r.especie==="jabali").length;
+  const totalCor=repartosList.filter(r=>r.especie==="corzo").length;
+  function sig(orden,cuotaIdx,actual){
+    let idx=0;
+    for(let i=0;i<orden.length*5;i++){
+      const g=orden[idx%orden.length], cuota=CUOTA[g][cuotaIdx];
+      if(actual[g]<cuota) return {grupo:g,falta:cuota-actual[g]};
+      idx++;
+    }
+    return {grupo:orden[0],falta:CUOTA[orden[0]][cuotaIdx]};
+  }
+  const jr=sig(ORDEN_JAB,0,jab), cr=sig(ORDEN_COR,1,cor);
+  return {jabNext:jr.grupo,jabFalta:jr.falta,corNext:cr.grupo,corFalta:cr.falta,jab,cor,totalJab,totalCor};
+}
+
+// ── INIT ──
+async function init() {
+  showScreen("screen-loading");
+  try {
+    const [rM,rC,rA,rP,rCfg,rRep,rTar] = await Promise.all([
+      sheetRead("Miembros!A:D"), sheetRead("Calendario!A:B"),
+      sheetRead("Asistencia!A:D"), sheetRead("Piezas!A:E"),
+      sheetRead("Config!A:B"), sheetRead("Repartos!A:C"), sheetRead("Tarjetas!A:B")
+    ]);
+    miembros = (!rM||rM.length<=1) ? [] : rM.slice(1).filter(r=>r[0]).map(r=>({
+      id:+r[0], nombre:String(r[1]||""), tipo:String(r[2]||"SOCIO"),
+      grupo:(function(v){const s=String(v||"").trim();return s.includes("T")||s.includes("-202")?"":(s==="5/6"?"5/6":s);})(r[3]),
+      batidas:{}, piezas:{}
+    }));
+    if(miembros.length===0) {
+      await sheetWrite("Miembros!A1",[["ID","NOMBRE","TIPO","GRUPO"]]);
+      await sheetWrite("Asistencia!A1",[["MIEMBRO_ID","MES","FECHA","ASISTE"]]);
+      await sheetWrite("Piezas!A1",[["MIEMBRO_ID","MES","FECHA","JABALI","CORZO"]]);
+      await sheetWrite("Config!A1",[["CLAVE","VALOR"],["cuotaBase",750],["cuotaFija",75]]);
+      await sheetWrite("Repartos!A1",[["FECHA","ESPECIE","GRUPO"]]);
+      await sheetWrite("Tarjetas!A1",[["NUMERO","ASIGNADO_A"]]);
+      const fCal=[["MES","FECHA"]];
+      Object.entries(WEEKENDS).forEach(([mes,fechas])=>Object.keys(fechas).forEach(f=>fCal.push([mes,f])));
+      await sheetWrite("Calendario!A1",fCal);
+    }
+    calendario = JSON.parse(JSON.stringify(WEEKENDS));
+    if(rC&&rC.length>1) rC.slice(1).forEach(r=>{if(r[0]&&r[1]&&calendario[r[0]]!==undefined){const fd=cleanDate(r[1]);calendario[r[0]][fd]=true;}});
+    if(rA&&rA.length>1) rA.slice(1).forEach(r=>{const m=miembros.find(x=>x.id===+r[0]);if(m&&r[1]&&r[2]){const fd=cleanDate(r[2]);if(!m.batidas[r[1]])m.batidas[r[1]]={};m.batidas[r[1]][fd]=String(r[3])==="1";}});
+    if(rP&&rP.length>1) rP.slice(1).forEach(r=>{const m=miembros.find(x=>x.id===+r[0]);if(m&&r[1]&&r[2]){const fd=cleanDate(r[2]);if(!m.piezas[r[1]])m.piezas[r[1]]={};m.piezas[r[1]][fd]={jabali:+r[3]||0,corzo:+r[4]||0};}});
+    if(rCfg&&rCfg.length>1) rCfg.slice(1).forEach(r=>{if(r[0]==="cuotaBase")cuotaBase=+r[1]||750;if(r[0]==="cuotaFija")cuotaFija=+r[1]||75;});
+    repartos=[];
+    if(rRep&&rRep.length>1) rRep.slice(1).forEach(r=>{const esp=String(r[1]||"").toLowerCase().trim(),grp=String(r[2]||"").trim(),fec=cleanDate(r[0]);if(fec&&(esp==="jabali"||esp==="corzo")&&GRUPOS.includes(grp))repartos.push({fecha:fec,especie:esp,grupo:grp});});
+    tarjetas={};
+    for(let i=1;i<=15;i++) tarjetas[i]="";
+    if(rTar&&rTar.length>1) rTar.slice(1).forEach(r=>{const num=parseInt(r[0]);if(num>=1&&num<=15)tarjetas[num]=String(r[1]||"").trim();});
+    showScreen("screen-inicio");
+  } catch(e) {
+    document.getElementById("error-msg").textContent=e.message;
+    showScreen("screen-error");
+  }
+}
+
+// ── SAVES ──
+async function saveAsistencia(){const f=[["MIEMBRO_ID","MES","FECHA","ASISTE"]];miembros.forEach(m=>Object.entries(m.batidas||{}).forEach(([mes,fechas])=>Object.entries(fechas).forEach(([fecha,v])=>{if(v)f.push([m.id,mes,fecha,"1"]);})));await sheetWrite("Asistencia!A1",f);}
+async function savePiezas(){const f=[["MIEMBRO_ID","MES","FECHA","JABALI","CORZO"]];miembros.forEach(m=>Object.entries(m.piezas||{}).forEach(([mes,fechas])=>Object.entries(fechas).forEach(([fecha,p])=>{if((p.jabali||0)>0||(p.corzo||0)>0)f.push([m.id,mes,fecha,p.jabali||0,p.corzo||0]);})));await sheetWrite("Piezas!A1",f);}
+async function saveCalendario(){const f=[["MES","FECHA"]];Object.entries(calendario).forEach(([mes,fechas])=>Object.keys(fechas).forEach(fecha=>f.push([mes,fecha])));await sheetWrite("Calendario!A1",f);}
+async function saveMiembros(){await sheetWrite("Miembros!A1",[["ID","NOMBRE","TIPO","GRUPO"],...miembros.map(m=>[m.id,m.nombre,m.tipo,m.grupo||""])]);}
+async function saveConfig(){await sheetWrite("Config!A1",[["CLAVE","VALOR"],["cuotaBase",cuotaBase],["cuotaFija",cuotaFija]]);}
+async function saveRepartos(){await sheetWrite("Repartos!A1",[["FECHA","ESPECIE","GRUPO"],...repartos.map(r=>[r.fecha,r.especie,r.grupo])]);}
+async function saveTarjetas(){const f=[["NUMERO","ASIGNADO_A"]];for(let i=1;i<=15;i++)f.push([i,tarjetas[i]||""]);await sheetWrite("Tarjetas!A1",f);}
+
+// ── NAVIGATION ──
+function showScreen(id) {
+  ["screen-loading","screen-error","screen-inicio","screen-socio","screen-admin"].forEach(s=>{
+    const el=document.getElementById(s);
+    if(!el)return;
+    if(s===id){el.style.display=(s==="screen-inicio"||s==="screen-error")?"flex":"block";}
+    else el.style.display="none";
+  });
+}
+function showSocio(){showScreen("screen-socio");socioSeleccionado=null;socioTabActual="grupos";renderSocioTab();}
+function showAdmin(){showScreen("screen-admin");document.getElementById("admin-pin-view").style.display="flex";document.getElementById("admin-panel-view").style.display="none";document.getElementById("pin-input").value="";document.getElementById("pin-error").style.display="none";}
+function loginAdmin(){const v=document.getElementById("pin-input").value;if(v===PIN){document.getElementById("admin-pin-view").style.display="none";document.getElementById("admin-panel-view").style.display="block";renderTab("asistencia");}else{document.getElementById("pin-error").style.display="block";document.getElementById("pin-input").value="";}}
+function showTab(tab,btn){document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));if(btn)btn.classList.add("active");["asistencia","piezas","grupos","calendario","miembros","tarjetas","tabla"].forEach(t=>{document.getElementById("tab-"+t).style.display=t===tab?"block":"none";});renderTab(tab);}
+function renderTab(tab){if(tab==="asistencia")renderAsistencia();else if(tab==="piezas")renderPiezas();else if(tab==="grupos")renderGruposAdmin();else if(tab==="calendario")renderCalendario();else if(tab==="miembros")renderMiembros();else if(tab==="tarjetas")renderTarjetas();else if(tab==="tabla")renderTabla();}
+
+// ── SOCIO ──
+function socioTab(t){socioTabActual=t;["grupos","ranking","buscar"].forEach(x=>{const el=document.getElementById("stab-"+x);if(!el)return;if(x===t){el.style.background="#1e4d33";el.style.borderColor="#3d8a5f";el.style.color="#e8f5e2";el.style.fontWeight="600";}else{el.style.background="#0d1a10";el.style.borderColor="#1a3020";el.style.color="#4a7a5a";el.style.fontWeight="400";}});renderSocioTab();}
+function renderSocioTab(){const el=document.getElementById("socio-tab-content");if(!el)return;if(socioTabActual==="grupos")renderSocioGrupos(el);else if(socioTabActual==="ranking")renderSocioRanking(el);else renderSocioBuscar(el);}
+
+function renderSocioGrupos(el){
+  const {jab,cor,jabNext,jabFalta,corNext,corFalta,totalJab,totalCor}=calcularTurno(repartos);
+  let html='<div style="display:flex;gap:12px;margin-bottom:12px"><div style="flex:1;background:#0d1a10;border:1px solid #1a3020;border-radius:10px;padding:10px 14px;text-align:center"><div style="font-size:10px;color:#3a6a3a;text-transform:uppercase">Total Jabalis abatidos</div><div style="font-size:22px;font-weight:800;color:#e8a84a">'+(totalJab||0)+'</div></div><div style="flex:1;background:#0d1a10;border:1px solid #1a3020;border-radius:10px;padding:10px 14px;text-align:center"><div style="font-size:10px;color:#3a6a3a;text-transform:uppercase">Total Corzos abatidos</div><div style="font-size:22px;font-weight:800;color:#a8d8e8">'+(totalCor||0)+'</div></div></div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px"><div class="turno-jab"><div style="font-size:10px;color:#e8a84a;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Siguiente Jabali</div><div style="font-size:24px;font-weight:800;color:#e8c27e">Grupo '+(jabNext||"?")+'</div><div style="font-size:12px;color:#a87a3a;margin-top:4px">Faltan '+(jabFalta||0)+' por entregar</div></div><div class="turno-cor"><div style="font-size:10px;color:#a8d8e8;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Siguiente Corzo</div><div style="font-size:24px;font-weight:800;color:#c8e8f0">Grupo '+(corNext||"?")+'</div><div style="font-size:12px;color:#4a8aa8;margin-top:4px">Faltan '+(corFalta||0)+' por entregar</div></div></div>';
+  html+='<div class="card" style="margin-bottom:20px"><div style="font-size:11px;color:#4a7a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">Piezas por grupo</div><table><thead><tr><th style="text-align:left">Grupo</th><th style="color:#e8a84a">&#128023; Jabalis</th><th style="color:#a8d8e8">&#129420; Corzos</th></tr></thead><tbody>';
+  GRUPOS.forEach((g,i)=>{html+='<tr style="background:'+(i%2===0?"#0d1a10":"#0a1208")+'"><td style="text-align:left;padding:8px 10px;font-weight:700;color:'+(g===jabNext?"#e8c27e":g===corNext?"#a8d8e8":"#c8e8c8")+'">Grupo '+g+(g===jabNext?'<span style="background:#3a2a10;color:#e8a84a;border-radius:4px;padding:1px 5px;font-size:9px;margin-left:3px">JAB</span>':"")+(g===corNext?'<span style="background:#0a1828;color:#a8d8e8;border-radius:4px;padding:1px 5px;font-size:9px;margin-left:3px">COR</span>':"")+' </td><td style="color:#e8a84a;font-weight:700;font-size:16px">'+(jab[g]||0)+'</td><td style="color:#a8d8e8;font-weight:700;font-size:16px">'+(cor[g]||0)+'</td></tr>';});
+  html+='</tbody></table></div>';
+  GRUPOS.forEach(g=>{const mg=miembros.filter(m=>m.grupo===g&&m.tipo!=="Z/P");html+='<div class="card" style="margin-bottom:8px"><button onclick="grupoExpandido=grupoExpandido===\''+g+'\'?null:\''+g+'\';renderSocioTab()" style="background:none;border:none;color:inherit;width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center"><div><span style="font-weight:700;color:#d4e8c2;font-size:15px">Grupo '+g+'</span><span style="color:#4a7a5a;font-size:12px;margin-left:10px">'+mg.length+' miembros</span></div><span style="color:#4caf70;font-size:18px">'+(grupoExpandido===g?"&#8722;":"&#43;")+'</span></button>'+(grupoExpandido===g?'<div style="margin-top:12px;border-top:1px solid #1a3020;padding-top:12px">'+(mg.length===0?'<div style="color:#2a4a2a;font-size:13px">Sin miembros asignados</div>':mg.map(m=>{const s=calcStats(m);return'<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #0d1a10">'+badge(m.tipo)+'<span style="flex:1;color:#c8e8c8;font-size:13px">'+m.nombre+'</span><span style="color:#e8a84a;font-size:12px">J:'+s.jab+'</span><span style="color:#a8d8e8;font-size:12px">C:'+s.cor+'</span></div>';}).join(""))+'</div>':"")+' </div>';});
+  el.innerHTML=html;
+}
+
+function renderSocioRanking(el){
+  const socios=miembros.filter(m=>m.tipo!=="Z/P");
+  const rankJab=[...socios].map(m=>Object.assign({},m,calcStats(m))).sort((a,b)=>b.jab-a.jab).slice(0,5);
+  const rankCor=[...socios].map(m=>Object.assign({},m,calcStats(m))).sort((a,b)=>b.cor-a.cor).slice(0,5);
+  const medal=["&#127942;","&#129352;","&#129353;","4","5"];
+  const tabla=(lista,esp,color)=>'<div class="card"><div style="font-size:11px;color:'+color+';letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">'+(esp==="jab"?"&#128023; Top Jabalis":"&#129420; Top Corzos")+'</div>'+lista.map((m,i)=>'<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #0d1a10"><span style="font-size:'+(i<3?20:14)+'px;min-width:28px;text-align:center">'+medal[i]+'</span><span style="flex:1;color:#c8e8c8;font-size:13px">'+m.nombre+'</span>'+(m.grupo?'<span style="color:#d4e870;font-size:11px">G'+m.grupo+'</span>':"")+' <span style="color:'+color+';font-weight:800;font-size:18px">'+(esp==="jab"?m.jab:m.cor)+'</span></div>').join("")+'</div>';
+  el.innerHTML='<div style="font-size:15px;font-weight:700;color:#e8f5e2;margin-bottom:16px">Ranking Temporada</div>'+tabla(rankJab,"jab","#e8a84a")+'<div style="margin-top:16px"></div>'+tabla(rankCor,"cor","#a8d8e8");
+}
+
+function renderSocioBuscar(el){
+  if(socioSeleccionado){renderSocioFicha(el);return;}
+  el.innerHTML='<div style="position:relative;margin-bottom:16px"><input id="socio-input" class="input" placeholder="Escribe tu apellido..." oninput="buscarSocio()" style="padding-left:44px"><span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;color:#3a6a4a">&#128269;</span></div><div id="socio-results"></div><div id="socio-hint" style="text-align:center;color:#2a4a2a;margin-top:40px"><div style="font-size:48px">&#127919;</div><div style="margin-top:12px">Escribe al menos 2 letras</div></div>';
+}
+
+function buscarSocio(){
+  const q=document.getElementById("socio-input").value.toLowerCase();
+  const hint=document.getElementById("socio-hint"), results=document.getElementById("socio-results");
+  if(q.length<2){hint.style.display="block";results.innerHTML="";return;}
+  hint.style.display="none";
+  const found=miembros.filter(m=>m.tipo!=="Z/P"&&m.nombre.toLowerCase().includes(q));
+  if(!found.length){results.innerHTML='<div style="text-align:center;color:#3a6a4a;padding:30px">No encontrado</div>';return;}
+  results.innerHTML=found.map(m=>{const s=calcStats(m);return'<button onclick="socioSeleccionado='+m.id+';renderSocioTab()" style="background:#111f16;border:1px solid #1e3828;border-radius:12px;padding:14px 18px;text-align:left;display:flex;align-items:center;gap:12px;color:inherit;width:100%;margin-bottom:8px">'+badge(m.tipo)+(m.grupo?'<span style="background:#2d3a1a;color:#d4e870;border:1px solid #4a5a20;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700">G'+m.grupo+'</span>':"")+' <span style="flex:1;color:#d4e8c2;font-weight:600">'+m.nombre+'</span><span style="color:#4caf70;font-size:13px;font-weight:700">'+s.dias+' dias</span></button>';}).join("");
+}
+
+function renderSocioFicha(el){
+  const m=miembros.find(x=>x.id===socioSeleccionado);if(!m){el.innerHTML="";return;}
+  const s=calcStats(m);
+  let html='<button onclick="socioSeleccionado=null;renderSocioTab()" style="background:none;border:none;color:#4caf70;font-size:14px;margin-bottom:16px">&#8592; Volver</button><div style="background:linear-gradient(135deg,#1e4d33,#0f2a1a);border:1px solid #2d6a4f;border-radius:16px;padding:22px;margin-bottom:20px"><div style="font-size:11px;color:#4caf70;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">'+m.tipo+(m.grupo?" · Grupo "+m.grupo:"")+'</div><div style="font-size:20px;font-weight:700;color:#e8f5e2;margin-bottom:18px">'+m.nombre+'</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">';
+  [["Batidas",s.dias,"#4caf70"],["Asist.",s.pct.toFixed(1)+"%","#7ee8a2"],["Jabali",s.jab,"#e8a84a"],["Corzo",s.cor,"#a8d8e8"]].forEach(x=>{html+='<div style="background:#0a1a0f;border-radius:10px;padding:12px 6px;text-align:center"><div style="font-size:20px;font-weight:800;color:'+x[2]+'">'+x[1]+'</div><div style="font-size:10px;color:#4a7a5a;margin-top:2px;text-transform:uppercase;letter-spacing:1px">'+x[0]+'</div></div>';});
+  html+='</div></div>';
+  MESES.forEach(mes=>{
+    const fechas=Object.keys(calendario[mes.id]||{}).sort();if(!fechas.length)return;
+    const bm=(m.batidas&&m.batidas[mes.id])||{}, pm=(m.piezas&&m.piezas[mes.id])||{};
+    const cnt=fechas.filter(f=>bm[f]&&calendario[mes.id]&&calendario[mes.id][f]).length;
+    html+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="color:#9abb9a;font-size:13px">'+mes.label+'</span><span style="background:'+(cnt>0?"#1e4d33":"#1a1a1a")+';color:'+(cnt>0?"#4caf70":"#3a3a3a")+';border:1px solid '+(cnt>0?"#2d6a4f":"#2a2a2a")+';border-radius:20px;padding:2px 12px;font-size:13px;font-weight:700">'+cnt+'/'+fechas.length+'</span></div><div style="display:flex;flex-wrap:wrap;gap:8px">';
+    fechas.forEach(f=>{const ok=!!bm[f],p=(pm&&pm[f])||{jabali:0,corzo:0};html+='<div style="background:'+(ok?"#1e4d33":"#0f1a10")+';border:1px solid '+(ok?"#3d8a5f":"#1a3020")+';border-radius:8px;padding:7px 10px;text-align:center;min-width:52px"><div style="font-size:11px;color:'+(ok?"#7ee8a2":"#3a5a3a")+';font-weight:600">'+cleanDate(f).slice(5).replace("-","/")+' </div><div style="font-size:10px;color:'+(ok?"#4caf70":"#2a4a2a")+'">'+diaAbr(f)+'</div><div style="font-size:18px;margin:2px 0">'+(ok?"&#10003;":"&middot;")+'</div>'+(ok&&((p.jabali||0)>0||(p.corzo||0)>0)?'<div style="font-size:10px;color:#e8c27e;margin-top:2px">'+(p.jabali>0?"J:"+p.jabali+" ":"")+(p.corzo>0?"C:"+p.corzo:"")+'</div>':"")+' </div>';});
+    html+='</div></div>';
+  });
+  el.innerHTML=html;
+}
+
+// ── TAB ASISTENCIA ──
+function renderAsistencia(){
+  const fechas=Object.keys(calendario[mesActivo]||{}).sort();
+  const lista=miembros.filter(m=>m.tipo!=="Z/P"&&(filtroTipo==="TODOS"||m.tipo===filtroTipo));
+  let html=mesesBtns(mesActivo,"cambiarMesAsist")+'<br style="margin-bottom:8px"><div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">'+["TODOS","SOCIO","INVITADO","MENOR"].map(t=>'<button onclick="filtroTipo=\''+t+'\';renderAsistencia()" style="background:'+(filtroTipo===t?"#1a3020":"transparent")+';border:1px solid '+(filtroTipo===t?"#2d6a4f":"#1a3020")+';color:'+(filtroTipo===t?"#7ee8a2":"#3a6a3a")+';border-radius:6px;padding:4px 12px;font-size:12px">'+t+'</button>').join("")+'</div>';
+  if(!fechas.length){html+='<div style="text-align:center;color:#2a4a2a;padding:40px"><div style="font-size:40px">&#128197;</div><div style="margin-top:10px">Sin batidas. Añade en Calendario.</div></div>';}
+  else{
+    html+='<div class="overflow-x"><table><thead><tr><th style="text-align:left;min-width:160px;position:sticky;left:0;background:#060e08;z-index:2">Miembro</th><th>Tipo</th>'+fechas.map(f=>'<th style="min-width:44px"><div style="color:#4caf70;font-size:11px">'+cleanDate(f).slice(5).replace("-","/")+'</div><div style="color:#2d5a3a;font-size:10px">'+diaAbr(f)+'</div></th>').join("")+'<th style="color:#4caf70;min-width:40px">Total</th><th style="color:#d4e870;min-width:50px">Grupo</th></tr></thead><tbody>';
+    lista.forEach((m,i)=>{
+      const bm=m.batidas[mesActivo]||{}, tot=fechas.filter(f=>bm[f]&&calendario[mesActivo]&&calendario[mesActivo][f]).length, bg=i%2===0?"#0d1a10":"#0a1208";
+      html+='<tr><td style="text-align:left;padding:7px 10px;color:#c8e8c8;font-weight:500;position:sticky;left:0;background:'+bg+';border-right:1px solid #1a3020">'+m.nombre+'</td><td>'+badge(m.tipo)+'</td>'+fechas.map(f=>{const ok=!!bm[f];return'<td><button class="check-btn'+(ok?" on":"")+'" onclick="toggleAsist('+m.id+',\''+cleanDate(f)+'\')">'+(ok?"&#10003;":"&middot;")+'</button></td>';}).join("")+'<td><span style="background:'+(tot>0?"#1e4d33":"#0a1208")+';color:'+(tot>0?"#4caf70":"#2a4a2a")+';border-radius:6px;padding:2px 8px;font-weight:700;font-size:13px">'+tot+'</span></td><td style="color:#d4e870;font-size:11px;font-weight:600">'+(m.grupo||"-")+'</td></tr>';
+    });
+    html+='</tbody></table></div>';
+  }
+  document.getElementById("tab-asistencia").innerHTML=html;
+}
+function cambiarMesAsist(id){mesActivo=id;renderAsistencia();}
+function toggleAsist(mid,fecha){
+  const m=miembros.find(x=>x.id===mid);if(!m)return;
+  if(!m.batidas[mesActivo])m.batidas[mesActivo]={};
+  m.batidas[mesActivo][fecha]=!m.batidas[mesActivo][fecha];
+  const scrollEl=document.querySelector("#tab-asistencia .overflow-x");
+  const scrollLeft=scrollEl?scrollEl.scrollLeft:0;
+  renderAsistencia();
+  const newScrollEl=document.querySelector("#tab-asistencia .overflow-x");
+  if(newScrollEl)newScrollEl.scrollLeft=scrollLeft;
+  withSave(()=>saveAsistencia());
+}
+
+// ── TAB PIEZAS ──
+function renderPiezas(){
+  const fechas=Object.keys(calendario[mesActivo2]||{}).sort();
+  const totJ=miembros.reduce((s,m)=>s+calcStats(m).jab,0), totC=miembros.reduce((s,m)=>s+calcStats(m).cor,0);
+  let html='<div style="display:flex;gap:12px;margin-bottom:20px"><div style="flex:1;background:#0d1a10;border:1px solid #1a3020;border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px"><span style="font-size:32px">&#128023;</span><div><div style="font-size:28px;font-weight:800;color:#e8a84a">'+totJ+'</div><div style="font-size:11px;color:#3a6a3a;text-transform:uppercase;letter-spacing:1px">Jabalis temporada</div></div></div><div style="flex:1;background:#0d1a10;border:1px solid #1a3020;border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px"><span style="font-size:32px">&#129420;</span><div><div style="font-size:28px;font-weight:800;color:#a8d8e8">'+totC+'</div><div style="font-size:11px;color:#3a6a3a;text-transform:uppercase;letter-spacing:1px">Corzos temporada</div></div></div></div>';
+  html+=mesesBtns(mesActivo2,"cambiarMesPiezas")+'<br style="margin-bottom:8px">';
+  if(!fechas.length){html+='<div style="text-align:center;color:#2a4a2a;padding:40px">Sin batidas en este mes</div>';}
+  else{
+    html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">'+fechas.map(f=>'<button onclick="setFechaActiva(\''+cleanDate(f)+'\')" style="background:'+(fechaActiva===cleanDate(f)?"#2d3a1a":"#0d1a10")+';border:1px solid '+(fechaActiva===cleanDate(f)?"#7a9a3a":"#1a3020")+';color:'+(fechaActiva===cleanDate(f)?"#d4e870":"#4a7a5a")+';border-radius:10px;padding:8px 16px;font-size:13px;font-weight:'+(fechaActiva===cleanDate(f)?700:400)+'">'+cleanDate(f).slice(5).replace("-","/")+' <span style="font-size:11px;opacity:.7">'+diaAbr(f)+'</span></button>').join("")+'</div>';
+    if(fechaActiva){
+      const presentes=miembros.filter(m=>m.tipo!=="Z/P"&&!!((m.batidas[mesActivo2]||{})[fechaActiva]));
+      if(!presentes.length){html+='<div style="color:#2a4a2a;padding:20px">Ninguno apuntado a esta batida.</div>';}
+      else{
+        html+=presentes.map((m,i)=>{
+          const p=((m.piezas&&m.piezas[mesActivo2])&&m.piezas[mesActivo2][fechaActiva])||{jabali:0,corzo:0};
+          return'<div style="background:'+(i%2===0?"#0d1a10":"#0a1208")+';border:1px solid #1a3020;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">'+badge(m.tipo)+(m.grupo?'<span style="background:#2d3a1a;color:#d4e870;border:1px solid #4a5a20;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700">G'+m.grupo+'</span>':"")+' <span style="flex:1;color:#c8e8c8;font-weight:500;min-width:120px">'+m.nombre+'</span><div style="display:flex;align-items:center;gap:8px;background:#1a1208;border:1px solid #3a2a10;border-radius:8px;padding:6px 12px"><span style="font-size:18px">&#128023;</span><button class="pieza-btn" onclick="cambiarPieza('+m.id+',\'jabali\',-1)" style="background:#120e08;border:1px solid #3a2a10;color:#e8a84a">-</button><span style="color:#e8c27e;font-weight:800;font-size:18px;min-width:22px;text-align:center">'+(p.jabali||0)+'</span><button class="pieza-btn" onclick="cambiarPieza('+m.id+',\'jabali\',1)" style="background:#2a1e08;border:1px solid #5a4a20;color:#e8a84a">+</button></div><div style="display:flex;align-items:center;gap:8px;background:#0a1220;border:1px solid #10203a;border-radius:8px;padding:6px 12px"><span style="font-size:18px">&#129420;</span><button class="pieza-btn" onclick="cambiarPieza('+m.id+',\'corzo\',-1)" style="background:#080e18;border:1px solid #10203a;color:#a8d8e8">-</button><span style="color:#c8e8f0;font-weight:800;font-size:18px;min-width:22px;text-align:center">'+(p.corzo||0)+'</span><button class="pieza-btn" onclick="cambiarPieza('+m.id+',\'corzo\',1)" style="background:#0a1830;border:1px solid #204060;color:#a8d8e8">+</button></div></div>';
+        }).join("");
+      }
+    }
+  }
+  document.getElementById("tab-piezas").innerHTML=html;
+}
+function cambiarMesPiezas(id){mesActivo2=id;fechaActiva=null;renderPiezas();}
+function setFechaActiva(f){fechaActiva=fechaActiva===f?null:f;renderPiezas();}
+function cambiarPieza(mid,esp,delta){
+  const m=miembros.find(x=>x.id===mid);if(!m)return;
+  if(!m.piezas)m.piezas={};if(!m.piezas[mesActivo2])m.piezas[mesActivo2]={};
+  if(!m.piezas[mesActivo2][fechaActiva])m.piezas[mesActivo2][fechaActiva]={jabali:0,corzo:0};
+  const nuevoValor=Math.max(0,(m.piezas[mesActivo2][fechaActiva][esp]||0)+delta);
+  const valorAnterior=m.piezas[mesActivo2][fechaActiva][esp]||0;
+  m.piezas[mesActivo2][fechaActiva][esp]=nuevoValor;
+  if(nuevoValor<valorAnterior){
+    const espFull=esp==="jabali"?"jabali":"corzo", fechaC=cleanDate(fechaActiva);
+    for(let i=repartos.length-1;i>=0;i--){if(repartos[i].fecha===fechaC&&repartos[i].especie===espFull){repartos.splice(i,1);withSave(()=>saveRepartos());break;}}
+  }
+  renderPiezas();
+  withSave(()=>savePiezas());
+}
+
+// ── TAB GRUPOS ADMIN ──
+let repartoFecha2=null;
+function renderGruposAdmin(){
+  const {jabNext,jabFalta,corNext,corFalta,jab,cor,totalJab,totalCor}=calcularTurno(repartos);
+  const todasFechas=[];
+  Object.entries(calendario).forEach(([mes,fechas])=>Object.keys(fechas).sort().forEach(f=>todasFechas.push({mes,fecha:cleanDate(f)})));
+  let html='<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button onclick="renderGruposAdmin()" style="background:#0d1a10;border:1px solid #1a3020;color:#4a7a5a;border-radius:6px;padding:5px 12px;font-size:12px">&#8635; Actualizar</button></div>';
+  html+='<div style="display:flex;gap:12px;margin-bottom:12px"><div style="flex:1;background:#0d1a10;border:1px solid #1a3020;border-radius:10px;padding:10px 14px;text-align:center"><div style="font-size:10px;color:#3a6a3a;text-transform:uppercase">Total repartidos</div><div style="font-size:22px;font-weight:800;color:#e8a84a">'+(totalJab||0)+'&#128023;</div></div><div style="flex:1;background:#0d1a10;border:1px solid #1a3020;border-radius:10px;padding:10px 14px;text-align:center"><div style="font-size:10px;color:#3a6a3a;text-transform:uppercase">Total repartidos</div><div style="font-size:22px;font-weight:800;color:#a8d8e8">'+(totalCor||0)+'&#129420;</div></div></div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px"><div class="turno-jab"><div style="font-size:10px;color:#e8a84a;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Siguiente Jabali</div><div style="font-size:26px;font-weight:800;color:#e8c27e">Grupo '+(jabNext||"?")+'</div><div style="font-size:12px;color:#a87a3a;margin-top:4px">Faltan '+(jabFalta||0)+'</div></div><div class="turno-cor"><div style="font-size:10px;color:#a8d8e8;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Siguiente Corzo</div><div style="font-size:26px;font-weight:800;color:#c8e8f0">Grupo '+(corNext||"?")+'</div><div style="font-size:12px;color:#4a8aa8;margin-top:4px">Faltan '+(corFalta||0)+'</div></div></div>';
+  html+='<div class="card" style="margin-bottom:20px"><div style="font-size:11px;color:#4a7a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Repartir piezas de una batida</div><div style="font-size:11px;color:#3a5a4a;margin-bottom:14px">Las cantidades se toman de la pestaña Piezas.</div><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px"><div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:11px;color:#4a7a5a">Fecha batida</label><select id="reparto-fecha" class="input" style="width:160px" onchange="actualizarTotalesFecha()"><option value="">Seleccionar...</option>'+todasFechas.map(b=>'<option value="'+b.fecha+'">'+b.fecha.slice(5).replace("-","/")+' '+diaAbr(b.fecha)+'</option>').join("")+'</select></div><div id="totales-fecha-display" style="display:none;background:#0a1208;border:1px solid #1a3020;border-radius:8px;padding:10px 16px"><div style="font-size:10px;color:#4a7a5a;text-transform:uppercase;margin-bottom:4px">Abatidos esta batida</div><div style="display:flex;gap:14px"><span style="color:#e8a84a;font-weight:700">&#128023; <span id="tot-jab-fecha">0</span></span><span style="color:#a8d8e8;font-weight:700">&#129420; <span id="tot-cor-fecha">0</span></span></div></div><button onclick="generarPropuesta()" style="background:#1a3a4d;border:1px solid #2d5a6a;color:#e8f5e2;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600">Proponer reparto</button></div><div id="propuesta-container" style="display:none"><div style="font-size:11px;color:#4a7a5a;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;border-top:1px solid #1a3020;padding-top:12px">Propuesta editable</div><div id="propuesta-lista"></div><div style="display:flex;gap:10px;margin-top:14px"><button onclick="confirmarReparto()" style="background:#1e4d33;border:1px solid #3d8a5f;color:#e8f5e2;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;flex:1">&#10003; Confirmar y guardar</button><button onclick="cancelarPropuesta()" style="background:#1a0808;border:1px solid #4a1a1a;color:#e87a7a;border-radius:8px;padding:10px 16px;font-size:13px">Cancelar</button></div></div><div id="reparto-msg" style="margin-top:10px;font-size:13px;display:none"></div></div>';
+  html+='<div class="overflow-x" style="margin-bottom:20px"><table><thead><tr><th style="text-align:left;min-width:80px">Grupo</th><th style="color:#e8a84a">&#128023; Entregados</th><th style="color:#a8d8e8">&#129420; Entregados</th><th>Cuota J.</th><th>Cuota C.</th><th>Miembros</th></tr></thead><tbody>'+GRUPOS.map((g,i)=>{const mg=miembros.filter(m=>m.grupo===g&&m.tipo!=="Z/P");return'<tr style="background:'+(i%2===0?"#0d1a10":"#0a1208")+'"><td style="text-align:left;padding:8px 10px;font-weight:700;color:'+(g===jabNext?"#e8c27e":g===corNext?"#a8d8e8":"#c8e8c8")+'">Grupo '+g+(g===jabNext?'<span style="background:#3a2a10;color:#e8a84a;border-radius:4px;padding:1px 4px;font-size:9px;margin-left:3px">JAB&#9654;</span>':"")+( g===corNext?'<span style="background:#0a1828;color:#a8d8e8;border-radius:4px;padding:1px 4px;font-size:9px;margin-left:3px">COR&#9654;</span>':"")+' </td><td style="color:#e8a84a;font-weight:700;font-size:16px">'+(jab[g]||0)+'</td><td style="color:#a8d8e8;font-weight:700;font-size:16px">'+(cor[g]||0)+'</td><td style="color:#4a7a5a">'+CUOTA[g][0]+'</td><td style="color:#4a7a5a">'+CUOTA[g][1]+'</td><td style="color:#6aad82">'+mg.length+'</td></tr>';}).join("")+'</tbody></table></div>';
+  const histHtml=repartos.length===0?'<div style="color:#2a4a2a;padding:16px">Sin repartos registrados</div>':'<div class="overflow-x"><table><thead><tr><th style="text-align:left">Fecha</th><th>Especie</th><th>Grupo</th><th>Eliminar</th></tr></thead><tbody>'+[...repartos].reverse().map((r,i)=>'<tr style="background:'+(i%2===0?"#0d1a10":"#0a1208")+'"><td style="text-align:left;padding:6px 10px;color:#c8e8c8">'+r.fecha.slice(5).replace("-","/")+'</td><td style="'+(r.especie==="jabali"?"color:#e8a84a":"color:#a8d8e8")+';font-weight:600">'+(r.especie==="jabali"?"&#128023; Jabali":"&#129420; Corzo")+'</td><td style="color:#d4e870;font-weight:700">Grupo '+r.grupo+'</td><td><button onclick="eliminarReparto('+(repartos.length-1-i)+')" style="background:#1a0808;border:1px solid #4a1a1a;color:#e87a7a;border-radius:5px;padding:2px 8px;font-size:11px">&#10005;</button></td></tr>').join("")+'</tbody></table></div>';
+  html+='<div style="font-size:11px;color:#4a7a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Historial de repartos ('+repartos.length+')</div>'+histHtml;
+  document.getElementById("tab-grupos").innerHTML=html;
+}
+function actualizarTotalesFecha(){
+  const fecha=document.getElementById("reparto-fecha").value;
+  const disp=document.getElementById("totales-fecha-display");
+  if(!fecha){disp.style.display="none";return;}
+  let jab=0,cor=0;
+  miembros.forEach(m=>Object.values(m.piezas||{}).forEach(mesObj=>Object.entries(mesObj).forEach(([f,p])=>{if(cleanDate(f)===cleanDate(fecha)){jab+=(p&&p.jabali)||0;cor+=(p&&p.corzo)||0;}})));
+  document.getElementById("tot-jab-fecha").textContent=jab;
+  document.getElementById("tot-cor-fecha").textContent=cor;
+  disp.style.display="block";
+}
+function generarPropuesta(){
+  const fecha=document.getElementById("reparto-fecha").value;
+  const msg=document.getElementById("reparto-msg"), container=document.getElementById("propuesta-container");
+  if(!fecha){msg.style.display="block";msg.style.color="#e87a7a";msg.textContent="Selecciona una fecha";return;}
+  let totJab=0,totCor=0;
+  miembros.forEach(m=>Object.values(m.piezas||{}).forEach(mesObj=>Object.entries(mesObj).forEach(([f,p])=>{if(cleanDate(f)===cleanDate(fecha)){totJab+=(p&&p.jabali)||0;totCor+=(p&&p.corzo)||0;}})));
+  if(totJab===0&&totCor===0){msg.style.display="block";msg.style.color="#e87a7a";msg.textContent="No hay piezas anotadas para esta batida";return;}
+  const yaJab=repartos.filter(r=>r.fecha===cleanDate(fecha)&&r.especie==="jabali").length;
+  const yaCor=repartos.filter(r=>r.fecha===cleanDate(fecha)&&r.especie==="corzo").length;
+  const nuevosJab=Math.max(0,totJab-yaJab), nuevosCor=Math.max(0,totCor-yaCor);
+  if(nuevosJab===0&&nuevosCor===0){msg.style.display="block";msg.style.color="#4a7a9a";msg.textContent="Todas las piezas de esta batida ya están repartidas";container.style.display="none";return;}
+  msg.style.display="none";
+  propuestaPendiente=[];
+  const repartosTemp=[...repartos];
+  for(let i=0;i<nuevosJab;i++){const {jabNext}=calcularTurno(repartosTemp);propuestaPendiente.push({fecha:cleanDate(fecha),especie:"jabali",grupo:jabNext});repartosTemp.push({fecha:cleanDate(fecha),especie:"jabali",grupo:jabNext});}
+  for(let i=0;i<nuevosCor;i++){const {corNext}=calcularTurno(repartosTemp);propuestaPendiente.push({fecha:cleanDate(fecha),especie:"corzo",grupo:corNext});repartosTemp.push({fecha:cleanDate(fecha),especie:"corzo",grupo:corNext});}
+  renderPropuestaLista();
+  container.style.display="block";
+}
+function renderPropuestaLista(){
+  document.getElementById("propuesta-lista").innerHTML=propuestaPendiente.map((p,i)=>'<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1a3020"><span style="font-size:18px">'+(p.especie==="jabali"?"&#128023;":"&#129420;")+'</span><span style="color:'+(p.especie==="jabali"?"#e8a84a":"#a8d8e8")+';font-weight:600;min-width:60px">'+(p.especie==="jabali"?"Jabali":"Corzo")+'</span><span style="color:#4a7a5a;font-size:12px">&#8594; Grupo</span><select onchange="propuestaPendiente['+i+'].grupo=this.value" style="background:#0a1208;border:1px solid '+(p.especie==="jabali"?"#3a2a10":"#10203a")+';color:#d4e870;border-radius:6px;padding:4px 8px;font-size:13px;font-weight:700;outline:none">'+GRUPOS.map(g=>'<option value="'+g+'"'+(g===p.grupo?" selected":"")+'>'+g+'</option>').join("")+'</select><button onclick="propuestaPendiente.splice('+i+',1);renderPropuestaLista()" style="background:none;border:none;color:#e87a7a;font-size:16px;cursor:pointer">&#10005;</button></div>').join("");
+}
+function cancelarPropuesta(){propuestaPendiente=[];const c=document.getElementById("propuesta-container");if(c)c.style.display="none";}
+function confirmarReparto(){if(!propuestaPendiente.length)return;repartos.push(...propuestaPendiente);const msg=document.getElementById("reparto-msg");if(msg){msg.style.display="block";msg.style.color="#4caf70";msg.textContent="Guardados "+propuestaPendiente.length+" repartos";}propuestaPendiente=[];withSave(()=>saveRepartos());setTimeout(()=>renderGruposAdmin(),400);}
+function eliminarReparto(idx){if(!confirm("¿Eliminar este reparto?"))return;repartos.splice(idx,1);withSave(()=>saveRepartos());renderGruposAdmin();}
+
+// ── TAB CALENDARIO ──
+function renderCalendario(){
+  const total=Object.values(calendario).reduce((s,m)=>s+Object.keys(m).length,0);
+  let html=mesesBtns(mesCal,"cambiarMesCal")+'<br style="margin-bottom:8px"><div class="card" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px"><input type="date" id="nueva-fecha-input" class="input" style="width:auto"><button class="btn" onclick="addFecha()">+ Añadir</button></div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px">';
+  const fechas=Object.keys(calendario[mesCal]||{}).sort();
+  if(!fechas.length)html+='<div style="color:#2a4a2a;padding:16px">Sin batidas en este mes</div>';
+  fechas.forEach(f=>{html+='<div style="background:#0d1a10;border:1px solid #1e3828;border-radius:8px;padding:8px 14px;display:flex;gap:10px;align-items:center"><span style="color:#7ee8a2;font-weight:700">'+cleanDate(f).slice(5).replace("-","/")+'</span><span style="color:#3a6a3a;font-size:12px">'+diaAbr(f)+'</span><button onclick="removeFecha(\''+cleanDate(f)+'\')" style="background:none;border:none;color:#aa4444;font-size:18px">&#10005;</button></div>';});
+  html+='</div><div class="card"><div style="font-size:11px;color:#3a6a3a;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Resumen temporada</div><div style="display:flex;flex-wrap:wrap;gap:14px">'+MESES.map(m=>'<div style="text-align:center;min-width:46px"><div style="font-size:10px;color:#2a4a2a;margin-bottom:3px">'+m.abbr+'</div><div style="font-size:22px;font-weight:800;color:'+(Object.keys(calendario[m.id]||{}).length>0?"#4caf70":"#1e3828")+'">'+Object.keys(calendario[m.id]||{}).length+'</div></div>').join("")+'<div style="text-align:center;min-width:46px;border-left:1px solid #1a3020;padding-left:14px"><div style="font-size:10px;color:#2a4a2a;margin-bottom:3px">TOTAL</div><div style="font-size:22px;font-weight:800;color:#4caf70">'+total+'</div></div></div></div>';
+  document.getElementById("tab-calendario").innerHTML=html;
+}
+function cambiarMesCal(id){mesCal=id;renderCalendario();}
+function addFecha(){const f=document.getElementById("nueva-fecha-input").value;if(!f)return;const clean=cleanDate(f);if(!calendario[mesCal])calendario[mesCal]={};calendario[mesCal][clean]=true;renderCalendario();withSave(()=>saveCalendario());}
+function removeFecha(f){delete calendario[mesCal][f];miembros.forEach(m=>{if(m.batidas&&m.batidas[mesCal])delete m.batidas[mesCal][f];if(m.piezas&&m.piezas[mesCal])delete m.piezas[mesCal][f];});renderCalendario();withSave(()=>saveCalendario());}
+
+// ── TAB MIEMBROS ──
+function renderMiembros(){
+  const lista=miembros.filter(m=>filtroMiembro==="TODOS"||m.tipo===filtroMiembro);
+  let html='<div class="card" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px"><input id="nuevo-nombre" class="input" placeholder="APELLIDO APELLIDO NOMBRE" style="flex:1;min-width:180px" onkeydown="if(event.key===\'Enter\')addMiembro()"><select id="nuevo-tipo" class="input" style="width:auto">'+["SOCIO","INVITADO","MENOR","Z/P"].map(t=>'<option>'+t+'</option>').join("")+'</select><select id="nuevo-grupo" class="input" style="width:auto"><option value="">-</option>'+GRUPOS.map(g=>'<option>'+g+'</option>').join("")+'</select><button class="btn" onclick="addMiembro()">+ Añadir</button></div><div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">'+["TODOS","SOCIO","INVITADO","MENOR","Z/P"].map(t=>'<button onclick="filtroMiembro=\''+t+'\';renderMiembros()" style="background:'+(filtroMiembro===t?"#1e4d33":"transparent")+';border:1px solid '+(filtroMiembro===t?"#2d6a4f":"#1a3020")+';color:'+(filtroMiembro===t?"#7ee8a2":"#3a6a3a")+';border-radius:6px;padding:4px 12px;font-size:12px">'+t+' ('+(t==="TODOS"?miembros.length:miembros.filter(m=>m.tipo===t).length)+')</button>').join("")+'</div>';
+  lista.forEach((m,i)=>{const s=calcStats(m);html+='<div style="background:'+(i%2===0?"#0d1a10":"#0a1208")+';border:1px solid #1a3020;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">'+badge(m.tipo)+(m.grupo?'<span style="background:#2d3a1a;color:#d4e870;border:1px solid #4a5a20;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700">G'+m.grupo+'</span>':"")+' <span style="flex:1;color:#c8e8c8;font-size:13px">'+m.nombre+'</span><span style="color:#4a7a5a;font-size:12px">'+s.dias+'d '+s.pct.toFixed(0)+'%</span>'+(s.jab>0?'<span style="color:#e8a84a;font-size:12px">J:'+s.jab+'</span>':"")+(s.cor>0?'<span style="color:#a8d8e8;font-size:12px">C:'+s.cor+'</span>':"")+' <button onclick="removeMiembro('+m.id+')" style="background:#1a0808;border:1px solid #4a1a1a;color:#e87a7a;border-radius:6px;padding:3px 10px;font-size:11px">Eliminar</button></div>';});
+  document.getElementById("tab-miembros").innerHTML=html;
+}
+function addMiembro(){const n=document.getElementById("nuevo-nombre").value.trim().toUpperCase(),t=document.getElementById("nuevo-tipo").value,g=document.getElementById("nuevo-grupo").value;if(!n)return;miembros.push({id:Date.now(),nombre:n,tipo:t,grupo:g,batidas:{},piezas:{}});renderMiembros();withSave(()=>saveMiembros());}
+function removeMiembro(id){miembros=miembros.filter(m=>m.id!==id);renderMiembros();withSave(()=>saveMiembros());}
+
+// ── TAB TARJETAS ──
+function nombrePorAsignacion(valor){if(!valor)return"";if(valor==="ZUBIETA")return"Zubieta";const m=miembros.find(x=>String(x.id)===String(valor));return m?m.nombre:"";}
+function renderTarjetas(){
+  let html='<div class="card" style="margin-bottom:18px"><div style="font-size:11px;color:#4a7a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Tarjetas Leizarán</div><div style="font-size:12px;color:#3a5a4a">Asigna cada tarjeta a un socio o a Zubieta.</div></div><div style="display:flex;flex-direction:column;gap:8px">';
+  for(let i=1;i<=15;i++){
+    const valor=tarjetas[i]||"", nombreActual=nombrePorAsignacion(valor), abierto=tarjetaBuscadorAbierto===i;
+    html+='<div class="card" style="padding:14px 16px"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><div style="min-width:90px;font-weight:700;color:#d4e8c2;font-size:14px">Tarjeta '+i+'</div><div style="flex:1;min-width:160px">'+(abierto?'<input id="tarjeta-input-'+i+'" class="input" placeholder="Nombre o Zubieta..." oninput="buscarParaTarjeta('+i+')" autocomplete="off" style="margin-bottom:6px"><div id="tarjeta-resultados-'+i+'" style="max-height:280px;overflow-y:auto"></div>':'<button onclick="tarjetaBuscadorAbierto='+i+';renderTarjetas()" style="width:100%;text-align:left;background:#0a1208;border:1px solid #1e3828;border-radius:8px;padding:9px 14px;color:'+(nombreActual?"#d4e8c2":"#3a5a4a")+';font-size:13px">'+(nombreActual||"Sin asignar — tocar para asignar")+'</button>')+'</div>'+(valor&&!abierto?'<button onclick="tarjetas['+i+']=\'\';renderTarjetas();withSave(()=>saveTarjetas())" style="background:#1a0808;border:1px solid #4a1a1a;color:#e87a7a;border-radius:6px;padding:6px 12px;font-size:12px">Quitar</button>':"")+( abierto?'<button onclick="tarjetaBuscadorAbierto=null;renderTarjetas()" style="background:#0d1a10;border:1px solid #1a3020;color:#4a7a5a;border-radius:6px;padding:6px 12px;font-size:12px">Cancelar</button>':"")+' </div></div>';
+  }
+  html+='</div>';
+  document.getElementById("tab-tarjetas").innerHTML=html;
+  if(tarjetaBuscadorAbierto){const inp=document.getElementById("tarjeta-input-"+tarjetaBuscadorAbierto);if(inp){inp.focus();buscarParaTarjeta(tarjetaBuscadorAbierto);}}
+}
+function buscarParaTarjeta(num){
+  const inp=document.getElementById("tarjeta-input-"+num), cont=document.getElementById("tarjeta-resultados-"+num);
+  if(!inp||!cont)return;
+  const q=inp.value.trim().toLowerCase();
+  let candidatos=[];
+  if("zubieta".includes(q)||q.length===0)candidatos.push({id:"ZUBIETA",nombre:"Zubieta",especial:true});
+  if(q.length===0||"vacio".includes(q))candidatos.push({id:"",nombre:"(Dejar vacío)",especial:true});
+  miembros.filter(m=>m.tipo!=="Z/P"&&(q.length===0||m.nombre.toLowerCase().includes(q))).forEach(m=>candidatos.push({id:m.id,nombre:m.nombre,especial:false}));
+  cont.innerHTML=candidatos.map(c=>'<button onclick="tarjetas['+num+']=\''+String(c.id).replace(/'/g,"\\'")+'\';tarjetaBuscadorAbierto=null;renderTarjetas();withSave(()=>saveTarjetas())" style="display:block;width:100%;text-align:left;background:'+(c.especial?"#0d1a18":"#111f16")+';border:1px solid '+(c.especial?"#2a4a3a":"#1e3828")+';border-radius:6px;padding:8px 12px;color:'+(c.especial?"#9abbab":"#d4e8c2")+';font-size:13px;margin-bottom:4px">'+c.nombre+'</button>').join("");
+}
+
+// ── TAB TABLA ──
+function renderTabla(){
+  const total=totalBatidas();
+  if(!total){document.getElementById("tab-tabla").innerHTML='<div style="text-align:center;color:#2a4a2a;padding:60px"><div style="font-size:48px">&#128202;</div><p style="margin-top:16px">Añade batidas en Calendario.</p></div>';return;}
+  const todasF=MESES.flatMap(m=>Object.keys(calendario[m.id]||{}).sort().map(f=>({mes:m,fecha:cleanDate(f)})));
+  const mesesF=MESES.filter(m=>Object.keys(calendario[m.id]||{}).length>0);
+  const socios=miembros.filter(m=>m.tipo==="SOCIO"), invit=miembros.filter(m=>m.tipo==="INVITADO"), menores=miembros.filter(m=>m.tipo==="MENOR"), perros=miembros.filter(m=>m.tipo==="Z/P");
+  const totJ=miembros.filter(m=>m.tipo!=="Z/P").reduce((s,m)=>s+calcStats(m).jab,0), totC=miembros.filter(m=>m.tipo!=="Z/P").reduce((s,m)=>s+calcStats(m).cor,0);
+  const fila=(m,i)=>{const s=calcStats(m),bg=i%2===0?"#0d1a10":"#0a1208";return'<tr><td style="text-align:left;padding:5px 8px;color:#c8e8c8;position:sticky;left:0;background:'+bg+';border-right:1px solid #1a3020;white-space:nowrap;font-size:11px">'+m.nombre+'</td><td style="background:'+bg+'">'+badge(m.tipo)+'</td><td style="color:#d4e870;font-size:10px;font-weight:600">'+(m.grupo||"-")+'</td>'+todasF.map(({mes,fecha})=>{const ok=!!((m.batidas&&m.batidas[mes.id])||{})[fecha];return'<td style="background:'+(ok?"#122012":"transparent")+'">'+(ok?'<span style="color:#4caf70;font-weight:700">1</span>':'<span style="color:#1a2a1a">.</span>')+'</td>';}).join("")+'<td style="color:#7ee8a2;font-weight:700;border-left:2px solid #1e3828">'+s.dias+'</td><td style="color:#4a8a5a;font-size:11px">'+s.pct.toFixed(1)+'%</td><td style="color:'+(s.limp>=1?"#a8f0b8":"#4a7a5a")+';font-size:11px">'+s.limp.toFixed(2)+'</td><td style="color:'+(s.jul>0?"#e8f5a0":"#1e2a0e")+';font-weight:'+(s.jul>0?700:400)+';border-left:2px solid #1e3828;background:#080e04">'+(s.jul||"")+'</td><td style="color:'+(s.jab>0?"#e8c27e":"#2a2010")+';font-weight:'+(s.jab>0?700:400)+';border-left:2px solid #3a2a10">'+(s.jab||"")+'</td><td style="color:'+(s.cor>0?"#a8d8e8":"#101828")+';font-weight:'+(s.cor>0?700:400)+'"> '+(s.cor||"")+'</td></tr>';};
+  const grupo=(lista,label,color)=>lista.length?'<tr><td colspan="'+(7+todasF.length)+'" style="background:#060e08;padding:4px 10px;font-size:9px;color:'+color+';letter-spacing:2px;text-transform:uppercase;font-weight:700;opacity:.7">'+label+'</td></tr>'+lista.map((m,i)=>fila(m,i)).join(""):"";
+  let html='<div class="card" style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px"><label style="display:flex;flex-direction:column;gap:3px;color:#4a7a5a;font-size:12px">Cuota base perreros<input type="number" id="cuota-base-input" value="'+cuotaBase+'" class="input" style="width:110px"></label><label style="display:flex;flex-direction:column;gap:3px;color:#4a7a5a;font-size:12px">Cuota fija<input type="number" id="cuota-fija-input" value="'+cuotaFija+'" class="input" style="width:90px"></label><button class="btn" onclick="guardarCuotas()">Guardar</button><button class="btn" onclick="exportarCSV()" style="margin-left:auto;background:#1a3a4d;border-color:#2d5a6a">Exportar CSV</button></div>';
+  html+='<div class="overflow-x"><table><thead><tr><th style="min-width:150px;text-align:left;border-right:1px solid #1a3020;position:sticky;left:0;background:#060e08;z-index:2" rowspan="2">NOMBRE</th><th rowspan="2">TIPO</th><th rowspan="2">GRP</th>'+mesesF.map(m=>'<th colspan="'+Object.keys(calendario[m.id]||{}).length+'" style="text-align:center;border-right:1px solid #1a3020"><div style="font-size:9px;color:#2d6a3a">'+m.eu.toUpperCase()+'</div><div style="color:#4caf70;font-size:11px">'+m.label+'</div></th>').join("")+'<th style="min-width:36px;border-left:2px solid #2d6a4f" rowspan="2">Dias</th><th style="min-width:40px" rowspan="2">%</th><th style="min-width:44px" rowspan="2">Limp.</th><th style="min-width:36px;border-left:2px solid #2d5a4f" rowspan="2">Jul.</th><th style="min-width:40px;border-left:2px solid #5a4a20;color:#e8a84a" rowspan="2">Jab.</th><th style="min-width:40px;color:#a8d8e8" rowspan="2">Cor.</th></tr><tr>'+todasF.map(({mes,fecha})=>'<th style="padding:2px;font-size:9px;color:#2d5a3a">'+fecha.slice(5).replace("-","/")+'</th>').join("")+'</tr></thead><tbody>'+grupo(socios,"Socios","#7ee8a2")+grupo(invit,"Invitados","#7eb8e8")+grupo(menores,"Menores","#e8c27e")+'<tr style="background:#060e08;border-top:2px solid #2d6a4f"><td colspan="3" style="padding:7px 10px;color:#4caf70;font-weight:700;font-size:12px;position:sticky;left:0;background:#060e08;border-right:1px solid #1a3020">DENETARA / TOTAL</td>'+todasF.map(({mes,fecha})=>{const cnt=miembros.filter(m=>m.tipo!=="Z/P"&&!!((m.batidas&&m.batidas[mes.id])||{})[fecha]).length;return'<td style="color:'+(cnt>0?"#4caf70":"#1a3020")+';font-weight:700;font-size:12px">'+(cnt||"")+'</td>';}).join("")+'<td style="color:#4caf70;font-weight:800;font-size:14px;border-left:2px solid #2d6a4f">'+miembros.filter(m=>m.tipo!=="Z/P").reduce((s,m)=>s+calcStats(m).dias,0)+'</td><td colspan="3"></td><td style="color:#e8c27e;font-weight:800;border-left:2px solid #3a2a10">'+(totJ||"")+'</td><td style="color:#a8d8e8;font-weight:800">'+(totC||"")+'</td></tr></tbody></table></div>';
+  if(perros.length){html+='<div style="font-size:11px;color:#4a7a5a;letter-spacing:3px;text-transform:uppercase;margin-bottom:12px">Zakurzale / Perreros</div><div class="overflow-x"><table><thead><tr>'+["Nombre","Batidas","%","Cuota prop.","Cuota fija","TOTAL"].map((h,i)=>'<th style="text-align:'+(i===0?"left":"center")+';color:'+(i===5?"#4caf70":"#3a6a3a")+'">'+h+'</th>').join("")+'</tr></thead><tbody>'+perros.map((m,i)=>{const s=calcStats(m),prop=(s.pct/100)*cuotaBase;return'<tr style="background:'+(i%2===0?"#0d1a10":"#0a1208")+'"><td style="padding:9px 12px;color:#c8e8c8;text-align:left">'+m.nombre+'</td><td style="color:#7ee8a2;font-weight:700">'+s.dias+'</td><td style="color:#4a8a5a">'+s.pct.toFixed(2)+'%</td><td style="color:#c8e8c8">'+prop.toFixed(2)+'</td><td style="color:#c8e8c8">'+cuotaFija.toFixed(2)+'</td><td style="color:#4caf70;font-weight:700;font-size:14px">'+(prop+cuotaFija).toFixed(2)+'</td></tr>';}).join("")+'</tbody></table></div>';}
+  html+='<div class="grid-stats">'+[["Total batidas",total,"#4caf70"],["Media caz./dia",total>0?(miembros.filter(m=>m.tipo!=="Z/P").reduce((s,m)=>s+calcStats(m).dias,0)/total).toFixed(1):"--","#4caf70"],["Socios activos",miembros.filter(m=>m.tipo==="SOCIO"&&calcStats(m).dias>0).length+"/"+miembros.filter(m=>m.tipo==="SOCIO").length,"#4caf70"],["Total Jabalis",totJ,"#e8a84a"],["Total Corzos",totC,"#a8d8e8"]].map(x=>'<div class="stat-card"><div style="font-size:10px;color:#2a4a2a;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">'+x[0]+'</div><div style="font-size:26px;font-weight:800;color:'+x[2]+'">'+x[1]+'</div></div>').join("")+'</div>';
+  document.getElementById("tab-tabla").innerHTML=html;
+}
+function guardarCuotas(){cuotaBase=+document.getElementById("cuota-base-input").value||750;cuotaFija=+document.getElementById("cuota-fija-input").value||75;withSave(()=>saveConfig());}
+function exportarCSV(){const todasF=MESES.flatMap(m=>Object.keys(calendario[m.id]||{}).sort().map(f=>({mes:m,fecha:cleanDate(f)})));const hdr=["Nombre","Tipo","Grupo",...todasF.map(b=>b.fecha),"Dias","%","Limpieza","Julio","Jabali","Corzo"].join(";");const rows=miembros.filter(m=>m.tipo!=="Z/P").map(m=>{const s=calcStats(m);return[m.nombre,m.tipo,m.grupo||"",...todasF.map(b=>((m.batidas&&m.batidas[b.mes.id])||{})[b.fecha]?"1":""),s.dias,s.pct.toFixed(2),s.limp.toFixed(2),s.jul,s.jab,s.cor].join(";");});const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+[hdr,...rows].join("\n")],{type:"text/csv;charset=utf-8"}));a.download="fielato_2026-2027.csv";a.click();}
+
+// ── START ──
+init();
+</script>
+</body>
+</html>
