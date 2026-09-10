@@ -1201,6 +1201,7 @@ function toggleAsist(mid,fecha){
 
 // ── TAB PIEZAS ──
 function renderPiezas(){
+  const scrollYAntes=window.scrollY;
   const fechas=Object.keys(calendario[mesActivo2]||{}).sort();
   const totJ=miembros.reduce((s,m)=>s+calcStats(m).jab,0);
   const totC=miembros.reduce((s,m)=>s+calcStats(m).cor,0);
@@ -1276,6 +1277,7 @@ function renderPiezas(){
     }
   }
   document.getElementById("tab-piezas").innerHTML=html;
+  window.scrollTo(0, scrollYAntes);
 }
 function cambiarMesPiezas(id){mesActivo2=id;fechaActiva=null;renderPiezas();}
 function setFechaActiva(f){fechaActiva=fechaActiva===f?null:f;renderPiezas();}
