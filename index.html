@@ -295,6 +295,8 @@ let grupoExpandido = null;
 let historico = []; // [{fecha, cazadorId, puesto, especie}]
 let historicoTemporada = null;
 let historicoExpandido = null;
+let screenActual = null;
+let adminTabActual = "asistencia";
 let manchas = {}; // {"Mancha A": ["Zona 1","Zona 2"], ...}
 let batidaLugar = {}; // {fecha: {mancha, zona}}
 
@@ -456,10 +458,56 @@ function calcularTurno(repartosList) {
 // Datos ficticios para modo prueba (mismos nombres reales, sin tocar Google Sheets)
 
 
+const CACHE_KEY = "fielato_cache_v1";
+
 async function init() {
+  const cached = leerCache();
+  if (cached) {
+    // Render instantly from what we saved last time, then quietly refresh in the background
+    await procesarDatos(cached);
+    showScreen("screen-inicio");
+    actualizarEnSegundoPlano();
+    return;
+  }
   showScreen("screen-loading");
   try {
     const all = await sheetReadAll();
+    await procesarDatos(all);
+    guardarCache(all);
+    showScreen("screen-inicio");
+  } catch(e) {
+    document.getElementById("error-msg").textContent = e.message;
+    showScreen("screen-error");
+  }
+}
+
+function leerCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+function guardarCache(all) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(all)); } catch(e) {}
+}
+async function actualizarEnSegundoPlano() {
+  try {
+    const all = await sheetReadAll();
+    await procesarDatos(all);
+    guardarCache(all);
+    refrescarVistaActual();
+  } catch(e) { console.error("Background refresh failed:", e); }
+}
+function refrescarVistaActual() {
+  if (screenActual==="screen-socio" && document.getElementById("socio-panel-view").style.display!=="none") {
+    renderSocioTab();
+  } else if (screenActual==="screen-admin" && document.getElementById("admin-panel-view").style.display!=="none") {
+    renderTab(adminTabActual);
+  }
+}
+
+async function procesarDatos(all) {
+  {
     const rM=all.Miembros, rC=all.Calendario, rA=all.Asistencia, rP=all.Piezas, rCfg=all.Config,
           rRep=all.Repartos, rTar=all.Tarjetas, rHist=all.Historico, rManch=all.Mancha, rBLugar=all.BatidaLugar;
 
@@ -577,11 +625,6 @@ async function init() {
         batidaLugar[fecha] = {mancha:String(r[1]||""), zona:String(r[2]||"")};
       });
     }
-
-    showScreen("screen-inicio");
-  } catch(e) {
-    document.getElementById("error-msg").textContent = e.message;
-    showScreen("screen-error");
   }
 }
 
@@ -651,6 +694,7 @@ async function saveBatidaLugar() {
 
 // ── NAVIGATION ──
 function showScreen(id) {
+  screenActual = id;
   ["screen-loading","screen-error","screen-inicio","screen-socio","screen-admin"].forEach(s=>{
     const el=document.getElementById(s);
     if(!el) return;
@@ -700,6 +744,7 @@ function loginAdmin() {
   }
 }
 function showTab(tab,btn) {
+  adminTabActual = tab;
   document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
   if(btn) btn.classList.add("active");
   ["asistencia","piezas","grupos","calendario","miembros","tabla","tarjetas"].forEach(t=>{
