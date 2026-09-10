@@ -936,12 +936,12 @@ function renderSocioGrupos(el) {
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
     <div class="turno-jab">
       <div style="font-size:10px;color:#e8a84a;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Hurrengo basurdea / Siguiente Jabali</div>
-      <div style="font-size:24px;font-weight:800;color:#e8c27e">Grupo ${jabNext||"?"}</div>
+      <div style="font-size:24px;font-weight:800;color:#e8c27e;white-space:nowrap">Grupo ${jabNext||"?"}</div>
       <div style="font-size:12px;color:#a87a3a;margin-top:4px">${jabFalta||0} falta banatzeko / Faltan ${jabFalta||0} por repartir</div>
     </div>
     <div class="turno-cor">
       <div style="font-size:10px;color:#a8d8e8;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Hurrengo orkatza / Siguiente Corzo</div>
-      <div style="font-size:24px;font-weight:800;color:#c8e8f0">Grupo ${corNext||"?"}</div>
+      <div style="font-size:24px;font-weight:800;color:#c8e8f0;white-space:nowrap">Grupo ${corNext||"?"}</div>
       <div style="font-size:12px;color:#4a8aa8;margin-top:4px">${corFalta||0} falta banatzeko / Faltan ${corFalta||0} por repartir</div>
     </div>
   </div>
@@ -960,8 +960,8 @@ function renderSocioGrupos(el) {
       <tbody>
         ${GRUPOS.map((g,i)=>`
           <tr style="background:${i%2===0?"#0d1a10":"#0a1208"}">
-            <td style="text-align:left;padding:8px 10px;font-weight:700;color:${g===jabNext?"#e8c27e":g===corNext?"#a8d8e8":"#c8e8c8"}">
-              Grupo ${g}
+            <td style="text-align:left;padding:8px 10px;font-weight:700;color:${g===jabNext?"#e8c27e":g===corNext?"#a8d8e8":"#c8e8c8"};white-space:nowrap">
+              ${g}
               ${g===jabNext?'<span style="background:#3a2a10;color:#e8a84a;border-radius:4px;padding:1px 5px;font-size:9px;margin-left:4px">JAB</span>':""}
               ${g===corNext?'<span style="background:#0a1828;color:#a8d8e8;border-radius:4px;padding:1px 5px;font-size:9px;margin-left:4px">COR</span>':""}
             </td>
@@ -1295,12 +1295,12 @@ function renderGruposAdmin(){
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
     <div class="turno-jab">
       <div style="font-size:10px;color:#e8a84a;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Siguiente Jabali</div>
-      <div style="font-size:26px;font-weight:800;color:#e8c27e">Grupo ${jabNext||"?"}</div>
+      <div style="font-size:24px;font-weight:800;color:#e8c27e;white-space:nowrap">Grupo ${jabNext||"?"}</div>
       <div style="font-size:12px;color:#a87a3a;margin-top:4px">Faltan ${jabFalta||0} por entregar</div>
     </div>
     <div class="turno-cor">
       <div style="font-size:10px;color:#a8d8e8;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Siguiente Corzo</div>
-      <div style="font-size:26px;font-weight:800;color:#c8e8f0">Grupo ${corNext||"?"}</div>
+      <div style="font-size:24px;font-weight:800;color:#c8e8f0;white-space:nowrap">Grupo ${corNext||"?"}</div>
       <div style="font-size:12px;color:#4a8aa8;margin-top:4px">Faltan ${corFalta||0} por entregar</div>
     </div>
   </div>
@@ -1355,8 +1355,8 @@ function renderGruposAdmin(){
       ${GRUPOS.map((g,i)=>{
         const mg=miembros.filter(m=>m.grupo===g&&m.tipo!=="Z/P");
         return `<tr style="background:${i%2===0?"#0d1a10":"#0a1208"}">
-          <td style="text-align:left;padding:8px 10px;font-weight:700;color:${g===jabNext?"#e8c27e":g===corNext?"#a8d8e8":"#c8e8c8"}">
-            Grupo ${g}
+          <td style="text-align:left;padding:8px 10px;font-weight:700;color:${g===jabNext?"#e8c27e":g===corNext?"#a8d8e8":"#c8e8c8"};white-space:nowrap">
+            ${g}
             ${g===jabNext?'<span style="background:#3a2a10;color:#e8a84a;border-radius:4px;padding:1px 4px;font-size:9px;margin-left:3px">JAB&#9654;</span>':""}
             ${g===corNext?'<span style="background:#0a1828;color:#a8d8e8;border-radius:4px;padding:1px 4px;font-size:9px;margin-left:3px">COR&#9654;</span>':""}
           </td>
