@@ -1,6 +1,13 @@
 var ADMIN_PIN = "fielatogestioa";
 
 function doGet(e) {
+  // Sin parametro "action": es una visita normal desde el navegador -> servir la app.
+  // Con "action": es una llamada de datos de la propia app -> servir JSON como antes.
+  if (!e.parameter || !e.parameter.action) {
+    return HtmlService.createHtmlOutputFromFile('Index')
+      .setTitle('Fielato')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1.0');
+  }
   return handleRequest(e);
 }
 
@@ -47,6 +54,25 @@ function handleRequest(e) {
           if (k === "pin") pin = v;
         }
       }
+    }
+
+    if (action === "readAll") {
+      var sheetNames = ["Miembros","Calendario","Asistencia","Piezas","Config","Repartos","Tarjetas","Historico","Mancha","BatidaLugar"];
+      var result = {};
+      var tzAll = ss.getSpreadsheetTimeZone();
+      sheetNames.forEach(function(name) {
+        var sh = ss.getSheetByName(name);
+        if (!sh) { result[name] = []; return; }
+        var data = sh.getDataRange().getValues();
+        result[name] = data.map(function(row) {
+          return row.map(function(cell) {
+            if (cell instanceof Date) return Utilities.formatDate(cell, tzAll, "yyyy-MM-dd");
+            if (cell === null || cell === undefined) return "";
+            return cell;
+          });
+        });
+      });
+      return out(result);
     }
 
     if (!sheetName) return out({error: "No sheet specified"});

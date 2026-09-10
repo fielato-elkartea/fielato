@@ -302,13 +302,12 @@ let batidaLugar = {}; // {fecha: {mancha, zona}}
 function cleanDate(f) { if(!f)return f; return String(f).length>10?String(f).substring(0,10):String(f); }
 
 // ── SHEETS API ──
-async function sheetRead(range) {
-  const sheet = range.split("!")[0];
-  const res = await fetch(SCRIPT_URL + "?action=read&sheet=" + encodeURIComponent(sheet));
+async function sheetReadAll() {
+  const res = await fetch(SCRIPT_URL + "?action=readAll");
   if (!res.ok) throw new Error("Error " + res.status);
   const d = await res.json();
   if (d && d.error) throw new Error(d.error);
-  return d || [];
+  return d || {};
 }
 async function sheetWrite(range, values) {
   const sheet = range.split("!")[0];
@@ -460,18 +459,9 @@ function calcularTurno(repartosList) {
 async function init() {
   showScreen("screen-loading");
   try {
-    const [rM,rC,rA,rP,rCfg,rRep,rTar,rHist,rManch,rBLugar] = await Promise.all([
-      sheetRead("Miembros!A:D"),
-      sheetRead("Calendario!A:B"),
-      sheetRead("Asistencia!A:D"),
-      sheetRead("Piezas!A:E"),
-      sheetRead("Config!A:B"),
-      sheetRead("Repartos!A:C"),
-      sheetRead("Tarjetas!A:B"),
-      sheetRead("Historico!A:D").catch(()=>[]), // hoja opcional: puede no existir todavia
-      sheetRead("Mancha!A:B").catch(()=>[]), // hoja opcional: puede no existir todavia
-      sheetRead("BatidaLugar!A:C").catch(()=>[]), // hoja opcional: puede no existir todavia
-    ]);
+    const all = await sheetReadAll();
+    const rM=all.Miembros, rC=all.Calendario, rA=all.Asistencia, rP=all.Piezas, rCfg=all.Config,
+          rRep=all.Repartos, rTar=all.Tarjetas, rHist=all.Historico, rManch=all.Mancha, rBLugar=all.BatidaLugar;
 
     if (!rM || rM.length <= 1) {
       await initSheet();
