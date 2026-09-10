@@ -328,10 +328,12 @@ let historicoExpandido = null;
 let screenActual = null;
 let adminTabActual = "asistencia";
 let manchas = {}; // {"Mancha A": ["Zona 1","Zona 2"], ...}
-let batidaLugar = {}; // {fecha: {mancha, zona}}
+let batidaLugar = {}; // {fecha: {mancha, zona}} -- legado, solo para el Historico manual (Excel)
+let capturas = []; // [{miembroId, fecha, especie, idx, mancha, zona, puesto}] -- detalle por captura individual
 
 // ── SHEETS API ──
 function cleanDate(f) { if(!f)return f; return String(f).length>10?String(f).substring(0,10):String(f); }
+function escHtml(s) { return String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
 // ── SHEETS API ──
 async function sheetReadAll() {
@@ -539,7 +541,8 @@ function refrescarVistaActual() {
 async function procesarDatos(all) {
   {
     const rM=all.Miembros, rC=all.Calendario, rA=all.Asistencia, rP=all.Piezas, rCfg=all.Config,
-          rRep=all.Repartos, rTar=all.Tarjetas, rHist=all.Historico, rManch=all.Mancha, rBLugar=all.BatidaLugar;
+          rRep=all.Repartos, rTar=all.Tarjetas, rHist=all.Historico, rManch=all.Mancha, rBLugar=all.BatidaLugar,
+          rCap=all.Capturas;
 
     if (!rM || rM.length <= 1) {
       await initSheet();
@@ -646,13 +649,26 @@ async function procesarDatos(all) {
       });
     }
 
-    // Load lugar de cada batida (columnas: FECHA, MANCHA, ZONA)
+    // Load lugar de cada batida (columnas: FECHA, MANCHA, ZONA) -- legado, solo Historico manual
     batidaLugar = {};
     if(rBLugar && rBLugar.length > 1) {
       rBLugar.slice(1).forEach(r=>{
         const fecha = cleanDate(r[0]);
         if(!fecha) return;
         batidaLugar[fecha] = {mancha:String(r[1]||""), zona:String(r[2]||"")};
+      });
+    }
+
+    // Load capturas individuales (columnas: FECHA, MIEMBRO_ID, ESPECIE, IDX, MANCHA, ZONA, PUESTO)
+    capturas = [];
+    if(rCap && rCap.length > 1) {
+      rCap.slice(1).forEach(r=>{
+        const fecha = cleanDate(r[0]);
+        const miembroId = +r[1] || null;
+        const especie = String(r[2]||"").toLowerCase().trim();
+        const idx = +r[3] || 1;
+        if(!fecha || !miembroId || !especie) return;
+        capturas.push({fecha, miembroId, especie, idx, mancha:String(r[4]||""), zona:String(r[5]||""), puesto:String(r[6]||"")});
       });
     }
   }
@@ -720,6 +736,16 @@ async function saveBatidaLugar() {
     if(l && (l.mancha||l.zona)) f.push([fecha, l.mancha||"", l.zona||""]);
   });
   await sheetWrite("BatidaLugar!A1",f);
+}
+async function saveCapturas() {
+  const f=[["FECHA","MIEMBRO_ID","ESPECIE","IDX","MANCHA","ZONA","PUESTO"]];
+  capturas.forEach(c=>f.push([c.fecha, c.miembroId, c.especie, c.idx, c.mancha||"", c.zona||"", c.puesto||""]));
+  await sheetWrite("Capturas!A1",f);
+}
+function puestosConocidos() {
+  const set = new Set();
+  capturas.forEach(c=>{ if(c.puesto) set.add(c.puesto); });
+  return Array.from(set).sort();
 }
 
 // ── NAVIGATION ──
@@ -873,8 +899,8 @@ function renderSocioFicha(el) {
   const capturasSocio = [];
   Object.values(m.piezas||{}).forEach(fechas=>{
     Object.entries(fechas||{}).forEach(([fecha,p])=>{
-      for(let i=0;i<(p.jabali||0);i++) capturasSocio.push({fecha, especie:"jabali"});
-      for(let i=0;i<(p.corzo||0);i++) capturasSocio.push({fecha, especie:"corzo"});
+      for(let idx=1;idx<=(p.jabali||0);idx++) capturasSocio.push({fecha, especie:"jabali", idx});
+      for(let idx=1;idx<=(p.corzo||0);idx++) capturasSocio.push({fecha, especie:"corzo", idx});
     });
   });
   historico.filter(h=>h.cazadorId===m.id).forEach(h=>capturasSocio.push(h));
@@ -884,13 +910,21 @@ function renderSocioFicha(el) {
     <div class="card">
       ${capturasSocio.map((h,i)=>{
         const esJabali = String(h.especie||"").toLowerCase()==="jabali";
-        const lugar = batidaLugar[h.fecha]||{};
         const color = esJabali?"#e8a84a":"#a8d8e8";
+        let lugarTxt="", puestoTxt="";
+        if(h.idx){
+          const c=capturas.find(x=>x.miembroId===m.id&&x.fecha===h.fecha&&x.especie===h.especie&&x.idx===h.idx);
+          if(c){ lugarTxt=[c.mancha||"",c.zona||""].filter(Boolean).join(" · "); puestoTxt=c.puesto||""; }
+        } else {
+          const lugar = batidaLugar[h.fecha]||{};
+          lugarTxt=[lugar.mancha||"",lugar.zona||""].filter(Boolean).join(" · ");
+          puestoTxt=h.puesto||"";
+        }
         return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;${i<capturasSocio.length-1?"border-bottom:1px solid #0d1a10":""}">
           <span style="font-size:22px;width:28px;text-align:center;flex-shrink:0">${esJabali?"&#128023;":"&#129420;"}</span>
           <div style="flex:1;min-width:0">
             <div style="color:${color};font-weight:700;font-size:13px">${esJabali?"Basurdea / Jabalí":"Orkatza / Corzo"}</div>
-            <div style="color:#4a7a5a;font-size:11px;margin-top:2px">${[lugar.mancha||"",lugar.zona||""].filter(Boolean).join(" · ")}</div>
+            <div style="color:#4a7a5a;font-size:11px;margin-top:2px">${[lugarTxt,puestoTxt].filter(Boolean).join(" · ")}</div>
           </div>
           <div style="color:#9abb9a;font-size:12px;text-align:right;white-space:nowrap">${cleanDate(h.fecha)}</div>
         </div>`;
@@ -1187,46 +1221,55 @@ function renderPiezas(){
   } else {
     html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">${fechas.map(f=>`<button onclick="setFechaActiva('${cleanDate(f)}')" style="background:${fechaActiva===cleanDate(f)?"#2d3a1a":"#0d1a10"};border:1px solid ${fechaActiva===cleanDate(f)?"#7a9a3a":"#1a3020"};color:${fechaActiva===cleanDate(f)?"#d4e870":"#4a7a5a"};border-radius:10px;padding:8px 16px;font-size:13px;font-weight:${fechaActiva===cleanDate(f)?700:400}">${cleanDate(f).slice(5).replace("-","/")} <span style="font-size:11px;opacity:.7">${diaAbr(f)}</span></button>`).join("")}</div>`;
     if(fechaActiva){
-      const lugar = batidaLugar[fechaActiva]||{mancha:"",zona:""};
       const manchaNombres = Object.keys(manchas).sort();
-      const zonasDeMancha = manchas[lugar.mancha]||[];
-      html+=`<div class="card" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
-        <label style="display:flex;flex-direction:column;gap:5px;color:#4a7a5a;font-size:12px;flex:1;min-width:160px">Mantxa ehizatua / Mancha cazada
-          <select class="input" onchange="cambiarManchaBatida('${fechaActiva}',this.value)">
-            <option value="">-</option>
-            ${manchaNombres.map(mn=>`<option value="${mn}"${mn===lugar.mancha?" selected":""}>${mn}</option>`).join("")}
-          </select>
-        </label>
-        <label style="display:flex;flex-direction:column;gap:5px;color:#4a7a5a;font-size:12px;flex:1;min-width:160px">Zona
-          <select class="input" onchange="cambiarZonaBatida('${fechaActiva}',this.value)" ${!lugar.mancha?"disabled":""}>
-            <option value="">-</option>
-            ${zonasDeMancha.map(z=>`<option value="${z}"${z===lugar.zona?" selected":""}>${z}</option>`).join("")}
-          </select>
-        </label>
-      </div>`;
       const presentes=miembros.filter(m=>m.tipo!=="Z/P"&&!!((m.batidas[mesActivo2]||{})[fechaActiva]));
+      html+=`<datalist id="puestos-datalist">${puestosConocidos().map(p=>`<option value="${escHtml(p)}">`).join("")}</datalist>`;
       if(!presentes.length){html+='<div style="color:#2a4a2a;padding:20px">Ninguno apuntado a esta batida.</div>';}
       else {
         html+=presentes.map((m,i)=>{
           const p=((m.piezas&&m.piezas[mesActivo2])&&m.piezas[mesActivo2][fechaActiva])||{jabali:0,corzo:0};
-          return `<div style="background:${i%2===0?"#0d1a10":"#0a1208"};border:1px solid #1a3020;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
-            ${badge(m.tipo)}
-            ${m.grupo?`<span style="background:#2d3a1a;color:#d4e870;border:1px solid #4a5a20;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700">G${m.grupo}</span>`:""}
-            <span style="flex:1;color:#c8e8c8;font-weight:500;min-width:120px">${m.nombre}</span>
-            <div class="pieza-box" style="background:#1a1208;border:1px solid #3a2a10">
-              <span style="font-size:18px">&#128023;</span>
-              <span style="color:#e8a84a;font-size:12px;font-weight:600;min-width:38px">Jabali</span>
-              <button class="pieza-btn" onclick="cambiarPieza(${m.id},'jabali',-1)" style="background:#120e08;border:1px solid #3a2a10;color:#e8a84a">-</button>
-              <span style="color:#e8c27e;font-weight:800;font-size:18px;min-width:22px;text-align:center">${p.jabali||0}</span>
-              <button class="pieza-btn" onclick="cambiarPieza(${m.id},'jabali',1)" style="background:#2a1e08;border:1px solid #5a4a20;color:#e8a84a">+</button>
+          const filasCaptura=[];
+          ["jabali","corzo"].forEach(esp=>{
+            const n=p[esp]||0;
+            for(let idx=1; idx<=n; idx++){
+              const c=capturas.find(x=>x.miembroId===m.id&&x.fecha===fechaActiva&&x.especie===esp&&x.idx===idx)||{mancha:"",zona:"",puesto:""};
+              const zonasDeMancha=manchas[c.mancha]||[];
+              filasCaptura.push(`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#080f0a;border:1px solid #142a18;border-radius:8px;padding:8px 10px;margin-top:6px">
+                <span style="font-size:15px">${esp==="jabali"?"&#128023;":"&#129420;"}</span>
+                <span style="color:#5a8a6a;font-size:11px;min-width:14px">#${idx}</span>
+                <select class="input" style="flex:1;min-width:120px;font-size:12px;padding:6px 8px" onchange="actualizarCaptura(${m.id},'${esp}',${idx},'mancha',this.value)">
+                  <option value="">Mantxa / Mancha -</option>
+                  ${manchaNombres.map(mn=>`<option value="${escHtml(mn)}"${mn===c.mancha?" selected":""}>${escHtml(mn)}</option>`).join("")}
+                </select>
+                <select class="input" style="flex:1;min-width:100px;font-size:12px;padding:6px 8px" onchange="actualizarCaptura(${m.id},'${esp}',${idx},'zona',this.value)" ${!c.mancha?"disabled":""}>
+                  <option value="">Zona -</option>
+                  ${zonasDeMancha.map(z=>`<option value="${escHtml(z)}"${z===c.zona?" selected":""}>${escHtml(z)}</option>`).join("")}
+                </select>
+                <input class="input" style="flex:1;min-width:100px;font-size:12px;padding:6px 8px" list="puestos-datalist" placeholder="Postua / Puesto" value="${escHtml(c.puesto)}" onchange="actualizarCaptura(${m.id},'${esp}',${idx},'puesto',this.value)">
+              </div>`);
+            }
+          });
+          return `<div style="background:${i%2===0?"#0d1a10":"#0a1208"};border:1px solid #1a3020;border-radius:10px;padding:12px 16px;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              ${badge(m.tipo)}
+              ${m.grupo?`<span style="background:#2d3a1a;color:#d4e870;border:1px solid #4a5a20;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700">G${m.grupo}</span>`:""}
+              <span style="flex:1;color:#c8e8c8;font-weight:500;min-width:120px">${m.nombre}</span>
+              <div class="pieza-box" style="background:#1a1208;border:1px solid #3a2a10">
+                <span style="font-size:18px">&#128023;</span>
+                <span style="color:#e8a84a;font-size:12px;font-weight:600;min-width:38px">Jabali</span>
+                <button class="pieza-btn" onclick="cambiarPieza(${m.id},'jabali',-1)" style="background:#120e08;border:1px solid #3a2a10;color:#e8a84a">-</button>
+                <span style="color:#e8c27e;font-weight:800;font-size:18px;min-width:22px;text-align:center">${p.jabali||0}</span>
+                <button class="pieza-btn" onclick="cambiarPieza(${m.id},'jabali',1)" style="background:#2a1e08;border:1px solid #5a4a20;color:#e8a84a">+</button>
+              </div>
+              <div class="pieza-box" style="background:#0a1220;border:1px solid #10203a">
+                <span style="font-size:18px">&#129420;</span>
+                <span style="color:#a8d8e8;font-size:12px;font-weight:600;min-width:34px">Corzo</span>
+                <button class="pieza-btn" onclick="cambiarPieza(${m.id},'corzo',-1)" style="background:#080e18;border:1px solid #10203a;color:#a8d8e8">-</button>
+                <span style="color:#c8e8f0;font-weight:800;font-size:18px;min-width:22px;text-align:center">${p.corzo||0}</span>
+                <button class="pieza-btn" onclick="cambiarPieza(${m.id},'corzo',1)" style="background:#0a1830;border:1px solid #204060;color:#a8d8e8">+</button>
+              </div>
             </div>
-            <div class="pieza-box" style="background:#0a1220;border:1px solid #10203a">
-              <span style="font-size:18px">&#129420;</span>
-              <span style="color:#a8d8e8;font-size:12px;font-weight:600;min-width:34px">Corzo</span>
-              <button class="pieza-btn" onclick="cambiarPieza(${m.id},'corzo',-1)" style="background:#080e18;border:1px solid #10203a;color:#a8d8e8">-</button>
-              <span style="color:#c8e8f0;font-weight:800;font-size:18px;min-width:22px;text-align:center">${p.corzo||0}</span>
-              <button class="pieza-btn" onclick="cambiarPieza(${m.id},'corzo',1)" style="background:#0a1830;border:1px solid #204060;color:#a8d8e8">+</button>
-            </div>
+            ${filasCaptura.join("")}
           </div>`;
         }).join("");
       }
@@ -1235,18 +1278,15 @@ function renderPiezas(){
   document.getElementById("tab-piezas").innerHTML=html;
 }
 function cambiarMesPiezas(id){mesActivo2=id;fechaActiva=null;renderPiezas();}
-function cambiarManchaBatida(fecha,mancha){
-  batidaLugar[fecha]={mancha, zona:""};
-  renderPiezas();
-  withSave(()=>saveBatidaLugar());
-}
-function cambiarZonaBatida(fecha,zona){
-  if(!batidaLugar[fecha]) batidaLugar[fecha]={mancha:"",zona:""};
-  batidaLugar[fecha].zona=zona;
-  renderPiezas();
-  withSave(()=>saveBatidaLugar());
-}
 function setFechaActiva(f){fechaActiva=fechaActiva===f?null:f;renderPiezas();}
+function actualizarCaptura(mid,esp,idx,campo,valor){
+  let c=capturas.find(x=>x.miembroId===mid&&x.fecha===fechaActiva&&x.especie===esp&&x.idx===idx);
+  if(!c){ c={miembroId:mid, fecha:fechaActiva, especie:esp, idx, mancha:"", zona:"", puesto:""}; capturas.push(c); }
+  c[campo]=valor;
+  if(campo==="mancha") c.zona="";
+  renderPiezas();
+  withSave(()=>saveCapturas());
+}
 function cambiarPieza(mid,esp,delta){
   const m=miembros.find(x=>x.id===mid);if(!m)return;
   if(!m.piezas)m.piezas={};if(!m.piezas[mesActivo2])m.piezas[mesActivo2]={};
@@ -1255,12 +1295,20 @@ function cambiarPieza(mid,esp,delta){
   const valorAnterior = m.piezas[mesActivo2][fechaActiva][esp]||0;
   m.piezas[mesActivo2][fechaActiva][esp] = nuevoValor;
 
-  // If reducing a pieza, remove the LAST matching reparto for this fecha+especie
-  // so the reparto count stays in sync with actual abatidos
   if(nuevoValor < valorAnterior) {
+    // Se ha quitado una pieza: elimina su fila de detalle (mancha/zona/puesto)
+    for(let i=capturas.length-1;i>=0;i--){
+      if(capturas[i].miembroId===mid && capturas[i].fecha===fechaActiva && capturas[i].especie===esp && capturas[i].idx===valorAnterior){
+        capturas.splice(i,1);
+        break;
+      }
+    }
+    withSave(()=>saveCapturas());
+
+    // Y elimina el ULTIMO reparto correspondiente a esta fecha+especie
+    // para que el contador de repartos se mantenga en sincronia con los abatidos
     const especieFull = esp==="jabali" ? "jabali" : "corzo";
     const fechaC = cleanDate(fechaActiva);
-    // Find last reparto index for this fecha+especie and remove it
     for(let i=repartos.length-1; i>=0; i--) {
       if(repartos[i].fecha===fechaC && repartos[i].especie===especieFull) {
         repartos.splice(i,1);
@@ -1268,6 +1316,10 @@ function cambiarPieza(mid,esp,delta){
         break;
       }
     }
+  } else if(nuevoValor > valorAnterior) {
+    // Se ha anadido una pieza: crea su fila de detalle vacia (mancha/zona/puesto)
+    capturas.push({miembroId:mid, fecha:fechaActiva, especie:esp, idx:nuevoValor, mancha:"", zona:"", puesto:""});
+    withSave(()=>saveCapturas());
   }
 
   renderPiezas();

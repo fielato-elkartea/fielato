@@ -57,7 +57,7 @@ function handleRequest(e) {
     }
 
     if (action === "readAll") {
-      var sheetNames = ["Miembros","Calendario","Asistencia","Piezas","Config","Repartos","Tarjetas","Historico","Mancha","BatidaLugar"];
+      var sheetNames = ["Miembros","Calendario","Asistencia","Piezas","Config","Repartos","Tarjetas","Historico","Mancha","BatidaLugar","Capturas"];
       var result = {};
       var tzAll = ss.getSpreadsheetTimeZone();
       sheetNames.forEach(function(name) {
