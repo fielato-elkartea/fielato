@@ -52,6 +52,7 @@ td { padding: 5px; border: 1px solid #111a11; text-align: center; }
 .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 10px; margin-top: 20px; }
 .pieza-box { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 6px 12px; }
 .pieza-btn { width: 28px; height: 28px; border-radius: 6px; font-size: 16px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.puesto-sug-item:hover, .puesto-sug-item:active { background: #1a3020; }
 .group-header td { background: #060e08; padding: 4px 10px; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; opacity: .7; }
 .turno-jab { background: #1a1208; border: 2px solid #e8a84a; border-radius: 10px; padding: 12px 16px; }
 .turno-cor { background: #0a1220; border: 2px solid #a8d8e8; border-radius: 10px; padding: 12px 16px; }
@@ -1224,7 +1225,6 @@ function renderPiezas(){
     if(fechaActiva){
       const manchaNombres = Object.keys(manchas).sort();
       const presentes=miembros.filter(m=>m.tipo!=="Z/P"&&!!((m.batidas[mesActivo2]||{})[fechaActiva]));
-      html+=`<datalist id="puestos-datalist">${puestosConocidos().map(p=>`<option value="${escHtml(p)}">`).join("")}</datalist>`;
       if(!presentes.length){html+='<div style="color:#2a4a2a;padding:20px">Ninguno apuntado a esta batida.</div>';}
       else {
         html+=presentes.map((m,i)=>{
@@ -1246,7 +1246,14 @@ function renderPiezas(){
                   <option value="">Zona -</option>
                   ${zonasDeMancha.map(z=>`<option value="${escHtml(z)}"${z===c.zona?" selected":""}>${escHtml(z)}</option>`).join("")}
                 </select>
-                <input class="input" style="flex:1;min-width:100px;font-size:12px;padding:6px 8px" list="puestos-datalist" placeholder="Postua / Puesto" value="${escHtml(c.puesto)}" onchange="actualizarCaptura(${m.id},'${esp}',${idx},'puesto',this.value)">
+                <div style="position:relative;flex:1;min-width:100px">
+                  <input class="input" id="puesto-${m.id}-${esp}-${idx}" style="width:100%;font-size:12px;padding:6px 8px" placeholder="Postua / Puesto" value="${escHtml(c.puesto)}"
+                    oninput="mostrarSugerenciasPuesto(this,${m.id},'${esp}',${idx})"
+                    onfocus="mostrarSugerenciasPuesto(this,${m.id},'${esp}',${idx})"
+                    onblur="setTimeout(function(){ocultarSugerenciasPuesto(${m.id},'${esp}',${idx})},150)"
+                    onchange="actualizarCaptura(${m.id},'${esp}',${idx},'puesto',this.value)">
+                  <div class="puesto-sugs" id="sugs-${m.id}-${esp}-${idx}" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:20;background:#0d1a10;border:1px solid #2d6a4f;border-radius:8px;margin-top:2px;max-height:160px;overflow-y:auto"></div>
+                </div>
               </div>`);
             }
           });
@@ -1281,6 +1288,27 @@ function renderPiezas(){
 }
 function cambiarMesPiezas(id){mesActivo2=id;fechaActiva=null;renderPiezas();}
 function setFechaActiva(f){fechaActiva=fechaActiva===f?null:f;renderPiezas();}
+function mostrarSugerenciasPuesto(input,mid,esp,idx){
+  const box=document.getElementById(`sugs-${mid}-${esp}-${idx}`);
+  if(!box) return;
+  const val=input.value.trim().toLowerCase();
+  const todos=puestosConocidos();
+  const filtrados=val?todos.filter(p=>p.toLowerCase().includes(val)):todos;
+  if(!filtrados.length){ box.style.display="none"; box.innerHTML=""; return; }
+  box.innerHTML=filtrados.slice(0,8).map(p=>`<div class="puesto-sug-item" data-puesto="${escHtml(p)}" style="padding:8px 10px;font-size:12px;color:#c8e8c8;cursor:pointer" onmousedown="seleccionarPuesto(this,${mid},'${esp}',${idx})">${escHtml(p)}</div>`).join("");
+  box.style.display="block";
+}
+function ocultarSugerenciasPuesto(mid,esp,idx){
+  const box=document.getElementById(`sugs-${mid}-${esp}-${idx}`);
+  if(box) box.style.display="none";
+}
+function seleccionarPuesto(el,mid,esp,idx){
+  const valor=el.dataset.puesto;
+  const input=document.getElementById(`puesto-${mid}-${esp}-${idx}`);
+  if(input) input.value=valor;
+  ocultarSugerenciasPuesto(mid,esp,idx);
+  actualizarCaptura(mid,esp,idx,'puesto',valor);
+}
 function actualizarCaptura(mid,esp,idx,campo,valor){
   let c=capturas.find(x=>x.miembroId===mid&&x.fecha===fechaActiva&&x.especie===esp&&x.idx===idx);
   if(!c){ c={miembroId:mid, fecha:fechaActiva, especie:esp, idx, mancha:"", zona:"", puesto:""}; capturas.push(c); }
