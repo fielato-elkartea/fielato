@@ -333,6 +333,7 @@ let adminTabActual = "asistencia";
 let manchas = {}; // {"Mancha A": ["Zona 1","Zona 2"], ...}
 let batidaLugar = {}; // {fecha: {mancha, zona}} -- legado, solo para el Historico manual (Excel)
 let capturas = []; // [{miembroId, fecha, especie, idx, mancha, zona, puesto}] -- detalle por captura individual
+let jornadasCerradas = {}; // {fecha: true} -- jornadas ya validadas/cerradas (bloqueadas para evitar ediciones sin querer)
 
 // ── SHEETS API ──
 function cleanDate(f) { if(!f)return f; return String(f).length>10?String(f).substring(0,10):String(f); }
@@ -557,7 +558,7 @@ async function procesarDatos(all) {
   {
     const rM=all.Miembros, rC=all.Calendario, rA=all.Asistencia, rP=all.Piezas, rCfg=all.Config,
           rRep=all.Repartos, rTar=all.Tarjetas, rHist=all.Historico, rManch=all.Mancha, rBLugar=all.BatidaLugar,
-          rCap=all.Capturas;
+          rCap=all.Capturas, rJor=all.Jornadas;
 
     if (!rM || rM.length <= 1) {
       await initSheet();
@@ -686,6 +687,16 @@ async function procesarDatos(all) {
         capturas.push({fecha, miembroId, especie, idx, mancha:String(r[4]||""), zona:String(r[5]||""), puesto:String(r[6]||"")});
       });
     }
+
+    // Load jornadas cerradas/validadas (columnas: FECHA, CERRADA)
+    jornadasCerradas = {};
+    if(rJor && rJor.length > 1) {
+      rJor.slice(1).forEach(r=>{
+        const fecha = cleanDate(r[0]);
+        if(!fecha) return;
+        if(String(r[1])==="1") jornadasCerradas[fecha] = true;
+      });
+    }
   }
 }
 
@@ -761,6 +772,11 @@ function puestosConocidos() {
   const set = new Set();
   capturas.forEach(c=>{ if(c.puesto) set.add(c.puesto); });
   return Array.from(set).sort();
+}
+async function saveJornadas() {
+  const f=[["FECHA","CERRADA"]];
+  Object.entries(jornadasCerradas).forEach(([fecha,c])=>{ if(c) f.push([fecha,"1"]); });
+  await sheetWrite("Jornadas!A1",f);
 }
 
 // ── NAVIGATION ──
@@ -1261,6 +1277,16 @@ function renderPiezas(){
     if(fechaActiva){
       const manchaNombres = Object.keys(manchas).sort();
       const presentes=miembros.filter(m=>m.tipo!=="Z/P"&&!!((m.batidas[mesActivo2]||{})[fechaActiva]));
+      const cerrada=!!jornadasCerradas[fechaActiva];
+      html+=cerrada?
+        `<div style="display:flex;align-items:center;gap:10px;background:#1a1208;border:1px solid #5a4a20;border-radius:10px;padding:10px 16px;margin-bottom:16px">
+          <span style="font-size:18px">&#128274;</span>
+          <span style="flex:1;color:#e8c27e;font-size:13px;font-weight:600">Jarduna balidatuta / Jornada validada — bloqueada para evitar cambios sin querer</span>
+        </div>`
+        :`<div style="display:flex;align-items:center;gap:10px;background:#0d1a10;border:1px solid #1a3020;border-radius:10px;padding:10px 16px;margin-bottom:16px">
+          <span style="flex:1;color:#4a7a5a;font-size:13px">Jornada abierta / Jornada abierta a cambios</span>
+          <button onclick="validarJornada('${fechaActiva}')" style="background:linear-gradient(135deg,#1e4d33,#2d6a4f);border:1px solid #3d8a5f;color:#e8f5e2;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700">&#128274; Jarduna balidatu / Validar jornada</button>
+        </div>`;
       if(!presentes.length){html+='<div style="color:#2a4a2a;padding:20px">Ninguno apuntado a esta batida.</div>';}
       else {
         html+=presentes.map((m,i)=>{
@@ -1324,6 +1350,23 @@ function renderPiezas(){
 }
 function cambiarMesPiezas(id){mesActivo2=id;fechaActiva=null;renderPiezas();}
 function setFechaActiva(f){fechaActiva=fechaActiva===f?null:f;renderPiezas();}
+function validarJornada(fecha){
+  jornadasCerradas[fecha]=true;
+  renderPiezas();
+  withSave(()=>saveJornadas());
+}
+// Comprueba si una jornada esta cerrada antes de dejar tocar sus capturas. Si lo
+// esta, pide confirmacion y, si el usuario acepta, la reabre para poder editar
+// (quedara marcada como pendiente de validar de nuevo).
+function confirmarEdicionJornada(fecha){
+  if(!jornadasCerradas[fecha]) return true;
+  const ok=confirm("Ehiz-jardun hau balidatuta dago / Esta jornada de caza esta cerrada.\n¿Seguro que quieres modificar las capturas?");
+  if(ok){
+    jornadasCerradas[fecha]=false;
+    withSave(()=>saveJornadas());
+  }
+  return ok;
+}
 function mostrarSugerenciasPuesto(input,mid,esp,idx){
   const box=document.getElementById(`sugs-${mid}-${esp}-${idx}`);
   if(!box) return;
@@ -1346,6 +1389,7 @@ function seleccionarPuesto(el,mid,esp,idx){
   actualizarCaptura(mid,esp,idx,'puesto',valor);
 }
 function actualizarCaptura(mid,esp,idx,campo,valor){
+  if(!confirmarEdicionJornada(fechaActiva)){ renderPiezas(); return; }
   let c=capturas.find(x=>x.miembroId===mid&&x.fecha===fechaActiva&&x.especie===esp&&x.idx===idx);
   if(!c){ c={miembroId:mid, fecha:fechaActiva, especie:esp, idx, mancha:"", zona:"", puesto:""}; capturas.push(c); }
   c[campo]=valor;
@@ -1354,6 +1398,7 @@ function actualizarCaptura(mid,esp,idx,campo,valor){
   withSave(()=>saveCapturas());
 }
 function cambiarPieza(mid,esp,delta){
+  if(!confirmarEdicionJornada(fechaActiva)) return;
   const m=miembros.find(x=>x.id===mid);if(!m)return;
   if(!m.piezas)m.piezas={};if(!m.piezas[mesActivo2])m.piezas[mesActivo2]={};
   if(!m.piezas[mesActivo2][fechaActiva])m.piezas[mesActivo2][fechaActiva]={jabali:0,corzo:0};
