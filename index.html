@@ -1279,9 +1279,10 @@ function renderPiezas(){
       const presentes=miembros.filter(m=>m.tipo!=="Z/P"&&!!((m.batidas[mesActivo2]||{})[fechaActiva]));
       const cerrada=!!jornadasCerradas[fechaActiva];
       html+=cerrada?
-        `<div style="display:flex;align-items:center;gap:10px;background:#1a1208;border:1px solid #5a4a20;border-radius:10px;padding:10px 16px;margin-bottom:16px">
+        `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#1a1208;border:1px solid #5a4a20;border-radius:10px;padding:10px 16px;margin-bottom:16px">
           <span style="font-size:18px">&#128274;</span>
-          <span style="flex:1;color:#e8c27e;font-size:13px;font-weight:600">Jarduna balidatuta / Jornada validada — bloqueada para evitar cambios sin querer</span>
+          <span style="flex:1;min-width:160px;color:#e8c27e;font-size:13px;font-weight:600">Jarduna balidatuta / Jornada validada — bloqueada para evitar cambios sin querer</span>
+          <button onclick="desbloquearJornada('${fechaActiva}')" style="background:#0d1a10;border:1px solid #5a4a20;color:#e8c27e;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700">&#128275; Desblokeatu / Desbloquear</button>
         </div>`
         :`<div style="display:flex;align-items:center;gap:10px;background:#0d1a10;border:1px solid #1a3020;border-radius:10px;padding:10px 16px;margin-bottom:16px">
           <span style="flex:1;color:#4a7a5a;font-size:13px">Jornada abierta / Jornada abierta a cambios</span>
@@ -1354,6 +1355,9 @@ function validarJornada(fecha){
   jornadasCerradas[fecha]=true;
   renderPiezas();
   withSave(()=>saveJornadas());
+}
+function desbloquearJornada(fecha){
+  if(confirmarEdicionJornada(fecha)) renderPiezas();
 }
 // Comprueba si una jornada esta cerrada antes de dejar tocar sus capturas. Si lo
 // esta, pide confirmacion y, si el usuario acepta, la reabre para poder editar
