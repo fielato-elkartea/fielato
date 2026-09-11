@@ -334,7 +334,8 @@ let historicoTemporada = null;
 let historicoExpandido = null;
 let screenActual = null;
 let adminTabActual = "asistencia";
-let manchas = {}; // {"Mancha A": ["Zona 1","Zona 2"], ...}
+let manchas = {}; // {"Mancha A": [], ...} -- solo se usan las claves (nombres de mancha)
+let zonas = []; // ["Zona 1","Zona 2",...] -- lista de zonas, independiente de la mancha elegida
 let batidaLugar = {}; // {fecha: {mancha, zona}} -- legado, solo para el Historico manual (Excel)
 let capturas = []; // [{miembroId, fecha, especie, idx, mancha, zona, puesto}] -- detalle por captura individual
 let jornadasCerradas = {}; // {fecha: true} -- jornadas ya validadas/cerradas (bloqueadas para evitar ediciones sin querer)
@@ -657,17 +658,20 @@ async function procesarDatos(all) {
     }
     historicoTemporada = temporadasHistorico()[0] || null;
 
-    // Load manchas (columnas: MANCHA, ZONA)
+    // Load manchas y zonas (columnas: MANCHA, ZONA). Las zonas son una lista
+    // independiente de las manchas (no van atadas a una mancha concreta),
+    // asi que se leen de toda la columna ZONA, sin importar la fila.
     manchas = {};
+    const zonaSet = new Set();
     if(rManch && rManch.length > 1) {
       rManch.slice(1).forEach(r=>{
         const mancha = String(r[0]||"").trim();
         const zona = String(r[1]||"").trim();
-        if(!mancha) return;
-        if(!manchas[mancha]) manchas[mancha]=[];
-        if(zona && !manchas[mancha].includes(zona)) manchas[mancha].push(zona);
+        if(mancha && !manchas[mancha]) manchas[mancha]=[];
+        if(zona) zonaSet.add(zona);
       });
     }
+    zonas = Array.from(zonaSet).sort();
 
     // Load lugar de cada batida (columnas: FECHA, MANCHA, ZONA) -- legado, solo Historico manual
     batidaLugar = {};
@@ -1313,7 +1317,6 @@ function renderPiezas(){
             const n=p[esp]||0;
             for(let idx=1; idx<=n; idx++){
               const c=capturas.find(x=>x.miembroId===m.id&&x.fecha===fechaActiva&&x.especie===esp&&x.idx===idx)||{mancha:"",zona:"",puesto:""};
-              const zonasDeMancha=manchas[c.mancha]||[];
               filasCaptura.push(`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#080f0a;border:1px solid #142a18;border-radius:8px;padding:8px 10px;margin-top:6px">
                 <span style="font-size:15px">${esp==="jabali"?"&#128023;":"&#129420;"}</span>
                 <span style="color:#5a8a6a;font-size:11px;min-width:14px">#${idx}</span>
@@ -1321,9 +1324,9 @@ function renderPiezas(){
                   <option value="">Mantxa / Mancha -</option>
                   ${manchaNombres.map(mn=>`<option value="${escHtml(mn)}"${mn===c.mancha?" selected":""}>${escHtml(mn)}</option>`).join("")}
                 </select>
-                <select class="input" style="flex:1;min-width:100px;font-size:12px;padding:6px 8px" onchange="actualizarCaptura(${m.id},'${esp}',${idx},'zona',this.value)" ${!c.mancha?"disabled":""}>
+                <select class="input" style="flex:1;min-width:100px;font-size:12px;padding:6px 8px" onchange="actualizarCaptura(${m.id},'${esp}',${idx},'zona',this.value)">
                   <option value="">Zona -</option>
-                  ${zonasDeMancha.map(z=>`<option value="${escHtml(z)}"${z===c.zona?" selected":""}>${escHtml(z)}</option>`).join("")}
+                  ${zonas.map(z=>`<option value="${escHtml(z)}"${z===c.zona?" selected":""}>${escHtml(z)}</option>`).join("")}
                 </select>
                 <div style="position:relative;flex:1;min-width:100px">
                   <input class="input" id="puesto-${m.id}-${esp}-${idx}" style="width:100%;font-size:12px;padding:6px 8px" placeholder="Postua / Puesto" value="${escHtml(c.puesto)}"
@@ -1413,7 +1416,6 @@ function actualizarCaptura(mid,esp,idx,campo,valor){
   let c=capturas.find(x=>x.miembroId===mid&&x.fecha===fechaActiva&&x.especie===esp&&x.idx===idx);
   if(!c){ c={miembroId:mid, fecha:fechaActiva, especie:esp, idx, mancha:"", zona:"", puesto:""}; capturas.push(c); }
   c[campo]=valor;
-  if(campo==="mancha") c.zona="";
   renderPiezas();
   withSave(()=>saveCapturas());
 }
