@@ -334,6 +334,8 @@ let capturas = []; // [{miembroId, fecha, especie, idx, mancha, zona, puesto}] -
 
 // ── SHEETS API ──
 function cleanDate(f) { if(!f)return f; return String(f).length>10?String(f).substring(0,10):String(f); }
+function fmtDia(f) { const c=cleanDate(f); return c?c.slice(8,10)+"/"+c.slice(5,7):c; }
+function fmtDiaAnio(f) { const c=cleanDate(f); return c?c.slice(8,10)+"/"+c.slice(5,7)+"/"+c.slice(0,4):c; }
 function escHtml(s) { return String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
 // ── SHEETS API ──
@@ -927,7 +929,7 @@ function renderSocioFicha(el) {
             <div style="color:${color};font-weight:700;font-size:13px">${esJabali?"Basurdea / Jabalí":"Orkatza / Corzo"}</div>
             <div style="color:#4a7a5a;font-size:11px;margin-top:2px">${[lugarTxt,puestoTxt].filter(Boolean).join(" · ")}</div>
           </div>
-          <div style="color:#9abb9a;font-size:12px;text-align:right;white-space:nowrap">${cleanDate(h.fecha)}</div>
+          <div style="color:#9abb9a;font-size:12px;text-align:right;white-space:nowrap">${fmtDiaAnio(h.fecha)}</div>
         </div>`;
       }).join("")}
     </div>`;
@@ -948,7 +950,7 @@ function renderSocioFicha(el) {
         ${fechas.map(f=>{
           const ok=!!bm[f];const p=(pm&&pm[f])||{jabali:0,corzo:0};
           return `<div style="background:${ok?"#1e4d33":"#0f1a10"};border:1px solid ${ok?"#3d8a5f":"#1a3020"};border-radius:8px;padding:7px 10px;text-align:center;min-width:52px">
-            <div style="font-size:11px;color:${ok?"#7ee8a2":"#3a5a3a"};font-weight:600">${cleanDate(f).slice(5).replace("-","/")}</div>
+            <div style="font-size:11px;color:${ok?"#7ee8a2":"#3a5a3a"};font-weight:600">${fmtDia(f)}</div>
             <div style="font-size:10px;color:${ok?"#4caf70":"#2a4a2a"}">${diaAbr(f)}</div>
             <div style="font-size:18px;margin:2px 0">${ok?"&#10003;":"&middot;"}</div>
             ${ok&&((p.jabali||0)>0||(p.corzo||0)>0)?`<div style="font-size:10px;color:#e8c27e;margin-top:2px">${(p.jabali||0)>0?"J:"+(p.jabali)+" ":""}${(p.corzo||0)>0?"C:"+p.corzo:""}</div>`:""}
@@ -1032,7 +1034,7 @@ function renderSocioGrupos(el) {
           const color=esJabali?"#e8a84a":"#a8d8e8";
           return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #0d1a10">
             <span style="font-size:18px">${esJabali?"&#128023;":"&#129420;"}</span>
-            <span style="flex:1;color:#9abb9a;font-size:12px">${cleanDate(r.fecha)}</span>
+            <span style="flex:1;color:#9abb9a;font-size:12px">${fmtDiaAnio(r.fecha)}</span>
             <span style="color:${color};font-weight:700;font-size:13px">Grupo ${r.grupo}</span>
           </div>`;
         }).join("")}
@@ -1141,7 +1143,7 @@ function renderSocioHistorico(el) {
           ${historicoExpandido===r.id?`
             <div style="padding:0 0 12px 38px">
               ${r.lista.map(h=>`<div style="display:flex;gap:14px;padding:4px 0;font-size:12px;color:#9abb9a">
-                <span>${cleanDate(h.fecha)}</span>
+                <span>${fmtDiaAnio(h.fecha)}</span>
                 ${h.puesto?`<span style="color:#4a7a5a">${h.puesto}. postua / Puesto ${h.puesto}</span>`:""}
               ${(batidaLugar[h.fecha]||{}).mancha?`<span style="color:#4a7a5a">${batidaLugar[h.fecha].mancha}${batidaLugar[h.fecha].zona?" · "+batidaLugar[h.fecha].zona:""}</span>`:""}
               </div>`).join("")}
@@ -1165,7 +1167,7 @@ function renderAsistencia() {
       <thead><tr>
         <th style="text-align:left;min-width:160px;position:sticky;left:0;background:#060e08;z-index:2">Miembro</th>
         <th>Tipo</th>
-        ${fechas.map(f=>`<th style="min-width:44px"><div style="color:#4caf70;font-size:11px">${cleanDate(f).slice(5).replace("-","/")}</div><div style="color:#2d5a3a;font-size:10px">${diaAbr(f)}</div></th>`).join("")}
+        ${fechas.map(f=>`<th style="min-width:44px"><div style="color:#4caf70;font-size:11px">${fmtDia(f)}</div><div style="color:#2d5a3a;font-size:10px">${diaAbr(f)}</div></th>`).join("")}
         <th style="color:#d4e870;min-width:50px">Grupo</th>
         <th style="color:#4caf70;min-width:40px">Total</th>
       </tr></thead><tbody>`;
@@ -1221,7 +1223,7 @@ function renderPiezas(){
   if(!fechas.length){
     html+='<div style="text-align:center;color:#2a4a2a;padding:40px"><div style="font-size:40px">&#128197;</div><div style="margin-top:10px">Sin batidas en este mes</div></div>';
   } else {
-    html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">${fechas.map(f=>`<button onclick="setFechaActiva('${cleanDate(f)}')" style="background:${fechaActiva===cleanDate(f)?"#2d3a1a":"#0d1a10"};border:1px solid ${fechaActiva===cleanDate(f)?"#7a9a3a":"#1a3020"};color:${fechaActiva===cleanDate(f)?"#d4e870":"#4a7a5a"};border-radius:10px;padding:8px 16px;font-size:13px;font-weight:${fechaActiva===cleanDate(f)?700:400}">${cleanDate(f).slice(5).replace("-","/")} <span style="font-size:11px;opacity:.7">${diaAbr(f)}</span></button>`).join("")}</div>`;
+    html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">${fechas.map(f=>`<button onclick="setFechaActiva('${cleanDate(f)}')" style="background:${fechaActiva===cleanDate(f)?"#2d3a1a":"#0d1a10"};border:1px solid ${fechaActiva===cleanDate(f)?"#7a9a3a":"#1a3020"};color:${fechaActiva===cleanDate(f)?"#d4e870":"#4a7a5a"};border-radius:10px;padding:8px 16px;font-size:13px;font-weight:${fechaActiva===cleanDate(f)?700:400}">${fmtDia(f)} <span style="font-size:11px;opacity:.7">${diaAbr(f)}</span></button>`).join("")}</div>`;
     if(fechaActiva){
       const manchaNombres = Object.keys(manchas).sort();
       const presentes=miembros.filter(m=>m.tipo!=="Z/P"&&!!((m.batidas[mesActivo2]||{})[fechaActiva]));
@@ -1405,7 +1407,7 @@ function renderGruposAdmin(){
         <label style="font-size:11px;color:#4a7a5a">Fecha batida</label>
         <select id="reparto-fecha" class="input" style="width:160px" onchange="actualizarTotalesFecha()">
           <option value="">Seleccionar...</option>
-          ${todasFechas.map(b=>`<option value="${b.fecha}">${b.fecha.slice(5).replace("-","/")} ${diaAbr(b.fecha)}</option>`).join("")}
+          ${todasFechas.map(b=>`<option value="${b.fecha}">${fmtDia(b.fecha)} ${diaAbr(b.fecha)}</option>`).join("")}
         </select>
       </div>
       <div id="totales-fecha-display" style="display:none;background:#0a1208;border:1px solid #1a3020;border-radius:8px;padding:10px 16px">
@@ -1473,7 +1475,7 @@ function renderGruposAdmin(){
       </tr></thead>
       <tbody>
         ${[...repartos].reverse().map((r,i)=>`<tr style="background:${i%2===0?"#0d1a10":"#0a1208"}">
-          <td style="text-align:left;padding:6px 10px;color:#c8e8c8">${r.fecha.slice(5).replace("-","/")}</td>
+          <td style="text-align:left;padding:6px 10px;color:#c8e8c8">${fmtDia(r.fecha)}</td>
           <td style="${r.especie==="jabali"?"color:#e8a84a":"color:#a8d8e8"};font-weight:600">${r.especie==="jabali"?"&#128023; Jabali":"&#129420; Corzo"}</td>
           <td style="color:#d4e870;font-weight:700">Grupo ${r.grupo}</td>
           <td><button onclick="eliminarReparto(${repartos.length-1-i})" style="background:#1a0808;border:1px solid #4a1a1a;color:#e87a7a;border-radius:5px;padding:2px 8px;font-size:11px">&#10005;</button></td>
@@ -1626,7 +1628,7 @@ function renderCalendario(){
   <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px">`;
   const fechas=Object.keys(calendario[mesCal]||{}).sort();
   if(!fechas.length)html+='<div style="color:#2a4a2a;padding:16px">Sin batidas en este mes</div>';
-  fechas.forEach(f=>{html+=`<div style="background:#0d1a10;border:1px solid #1e3828;border-radius:8px;padding:8px 14px;display:flex;gap:10px;align-items:center"><span style="color:#7ee8a2;font-weight:700">${cleanDate(f).slice(5).replace("-","/")}</span><span style="color:#3a6a3a;font-size:12px">${diaAbr(f)}</span><button onclick="removeFecha('${cleanDate(f)}')" style="background:none;border:none;color:#aa4444;font-size:18px">&#10005;</button></div>`;});
+  fechas.forEach(f=>{html+=`<div style="background:#0d1a10;border:1px solid #1e3828;border-radius:8px;padding:8px 14px;display:flex;gap:10px;align-items:center"><span style="color:#7ee8a2;font-weight:700">${fmtDia(f)}</span><span style="color:#3a6a3a;font-size:12px">${diaAbr(f)}</span><button onclick="removeFecha('${cleanDate(f)}')" style="background:none;border:none;color:#aa4444;font-size:18px">&#10005;</button></div>`;});
   html+=`</div><div class="card">
   <div style="font-size:11px;color:#3a6a3a;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Resumen temporada</div>
   <div style="display:flex;flex-wrap:wrap;gap:14px">
@@ -1748,7 +1750,7 @@ function renderTabla(){
         <th style="min-width:40px;border-left:2px solid #5a4a20;color:#e8a84a" rowspan="2">Jab.</th>
         <th style="min-width:40px;color:#a8d8e8" rowspan="2">Cor.</th>
       </tr>
-      <tr>${todasF.map(({mes,fecha})=>`<th style="padding:2px;font-size:9px;color:#2d5a3a">${fecha.slice(5).replace("-","/")}</th>`).join("")}</tr>
+      <tr>${todasF.map(({mes,fecha})=>`<th style="padding:2px;font-size:9px;color:#2d5a3a">${fmtDia(fecha)}</th>`).join("")}</tr>
     </thead>
     <tbody>
       ${grupo(socios,"Socios","#7ee8a2")}
