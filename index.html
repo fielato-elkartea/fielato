@@ -205,10 +205,11 @@ td { padding: 5px; border: 1px solid #111a11; text-align: center; }
   <div id="socio-panel-view" style="display:none">
     <div class="header">
       <button onclick="showInicio()" style="background:none;border:none;color:#4caf70;font-size:22px">&#8592;</button>
-      <div>
+      <div style="flex:1">
         <div style="font-size:11px;color:#4caf70;letter-spacing:3px;text-transform:uppercase">Fielato 2026-2027</div>
         <div style="font-size:18px;font-weight:700;color:#e8f5e2">Nire Bertaratzea / Mi Asistencia</div>
       </div>
+      <button onclick="cerrarSesionSocio()" style="background:none;border:none;color:#3a5a3a;font-size:11px">Saioa itxi / Cerrar sesión</button>
     </div>
     <div style="padding:16px;max-width:700px;margin:0 auto">
       <!-- Nav socio -->
@@ -249,6 +250,7 @@ td { padding: 5px; border: 1px solid #111a11; text-align: center; }
       </div>
       <span id="saving-indicator" style="display:none;color:#4caf70;font-size:12px">Gordetzen... / Guardando...</span>
       <button onclick="init()" style="background:#0d1a10;border:1px solid #1a3020;color:#4a7a5a;border-radius:8px;padding:5px 12px;font-size:12px">Birkargatu / Recargar</button>
+      <button onclick="cerrarSesionAdmin()" style="background:none;border:none;color:#3a6a3a;font-size:11px">Saioa itxi / Cerrar sesión</button>
     </div>
     <div class="nav">
       <button class="active" onclick="showTab('asistencia',this)">Asistencia</button>
@@ -765,16 +767,23 @@ function showScreen(id) {
 function showInicio() { showScreen("screen-inicio"); }
 function showSocio() {
   showScreen("screen-socio");
+  socioSeleccionado=null;
+  if(localStorage.getItem("fielato_socio_ok")==="1"){
+    document.getElementById("socio-pin-view").style.display="none";
+    document.getElementById("socio-panel-view").style.display="block";
+    socioTab("grupos");
+    return;
+  }
   document.getElementById("socio-pin-view").style.display="flex";
   document.getElementById("socio-panel-view").style.display="none";
   document.getElementById("socio-pin-input").value="";
   document.getElementById("socio-pin-error").style.display="none";
-  socioSeleccionado=null;
   setTimeout(()=>document.getElementById("socio-pin-input").focus(),0);
 }
 function loginSocio() {
   const v=document.getElementById("socio-pin-input").value;
   if(v===SOCIO_PIN){
+    try{ localStorage.setItem("fielato_socio_ok","1"); }catch(e){}
     document.getElementById("socio-pin-view").style.display="none";
     document.getElementById("socio-panel-view").style.display="block";
     socioTab("grupos");
@@ -783,8 +792,18 @@ function loginSocio() {
     document.getElementById("socio-pin-input").value="";
   }
 }
+function cerrarSesionSocio() {
+  try{ localStorage.removeItem("fielato_socio_ok"); }catch(e){}
+  showSocio();
+}
 function showAdmin() {
   showScreen("screen-admin");
+  if(localStorage.getItem("fielato_admin_ok")==="1"){
+    document.getElementById("admin-pin-view").style.display="none";
+    document.getElementById("admin-panel-view").style.display="block";
+    renderTab(adminTabActual);
+    return;
+  }
   document.getElementById("admin-pin-view").style.display="flex";
   document.getElementById("admin-panel-view").style.display="none";
   document.getElementById("pin-input").value="";
@@ -794,6 +813,7 @@ function showAdmin() {
 function loginAdmin() {
   const v=document.getElementById("pin-input").value;
   if(v===PIN){
+    try{ localStorage.setItem("fielato_admin_ok","1"); }catch(e){}
     document.getElementById("admin-pin-view").style.display="none";
     document.getElementById("admin-panel-view").style.display="block";
     renderTab("asistencia");
@@ -801,6 +821,10 @@ function loginAdmin() {
     document.getElementById("pin-error").style.display="block";
     document.getElementById("pin-input").value="";
   }
+}
+function cerrarSesionAdmin() {
+  try{ localStorage.removeItem("fielato_admin_ok"); }catch(e){}
+  showAdmin();
 }
 function showTab(tab,btn) {
   adminTabActual = tab;
