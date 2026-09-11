@@ -120,20 +120,31 @@ function out(data) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// Copia de seguridad semanal: crea una copia completa de la hoja en Drive.
+// Copia de seguridad semanal: crea una copia completa de la hoja en Drive y
+// ademas la manda por correo como archivo Excel adjunto.
 // Ejecutar via un trigger de tiempo (todos los miercoles), configurado a mano
 // en el editor de Apps Script: icono del reloj -> Add Trigger -> backupSemanal
 // -> Time-driven -> Week timer -> Every Wednesday.
 function backupSemanal() {
   var SPREADSHEET_ID = "1xAWvZNxxNXH4Ac7yenRUSTJliTteY-TnkMhRzaBVL2s";
   var BACKUP_FOLDER_NAME = "Fielato - Copias de seguridad";
+  var EMAIL_DESTINO = "guregestioa@gmail.com";
 
   var original = DriveApp.getFileById(SPREADSHEET_ID);
   var folders = DriveApp.getFoldersByName(BACKUP_FOLDER_NAME);
   var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(BACKUP_FOLDER_NAME);
 
   var fecha = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
-  original.makeCopy("Guregestioa Fielato - backup " + fecha, folder);
+  var nombre = "Guregestioa Fielato - backup " + fecha;
+  var copia = original.makeCopy(nombre, folder);
+
+  var excelBlob = copia.getAs(MimeType.MICROSOFT_EXCEL).setName(nombre + ".xlsx");
+  MailApp.sendEmail({
+    to: EMAIL_DESTINO,
+    subject: "Fielato - Copia de seguridad semanal (" + fecha + ")",
+    body: "Copia de seguridad semanal de la hoja de Fielato del " + fecha + ", adjunta en Excel.\n\nTambien se ha guardado en Drive, en la carpeta \"" + BACKUP_FOLDER_NAME + "\".",
+    attachments: [excelBlob]
+  });
 }
 
 // Funcion temporal de diagnostico: lista los nombres exactos de todas las
