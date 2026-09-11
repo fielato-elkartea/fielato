@@ -1942,7 +1942,22 @@ async function instalarApp() {
   }
 }
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(()=>{}));
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").then(reg => {
+      reg.addEventListener("updatefound", () => {
+        const nuevoSW = reg.installing;
+        if (!nuevoSW) return;
+        nuevoSW.addEventListener("statechange", () => {
+          // Si ya habia una version anterior controlando la pagina y ahora se
+          // activa una nueva, recarga una vez sola para mostrarla al momento
+          // (en vez de dejar que el usuario tenga que refrescar varias veces).
+          if (nuevoSW.state === "activated" && navigator.serviceWorker.controller) {
+            window.location.reload();
+          }
+        });
+      });
+    }).catch(()=>{});
+  });
 }
 
 // ── Pull-to-refresh: actualiza los datos sin recargar la pagina ni perder la sesion ──
