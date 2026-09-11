@@ -406,7 +406,9 @@ function badge(tipo) {
 }
 
 function saving(on) { document.getElementById("saving-indicator").style.display=on?"inline":"none"; }
+let guardadosPendientes = 0;
 async function withSave(fn) {
+  guardadosPendientes++;
   saving(true);
   try {
     await fn();
@@ -414,7 +416,8 @@ async function withSave(fn) {
     console.error("Save error:", e);
     alert("No se ha podido guardar: " + e.message);
   } finally {
-    saving(false);
+    guardadosPendientes=Math.max(0,guardadosPendientes-1);
+    if(guardadosPendientes===0) saving(false);
   }
 }
 
@@ -528,8 +531,15 @@ function guardarCache(all) {
   try { localStorage.setItem(CACHE_KEY, JSON.stringify(all)); } catch(e) {}
 }
 async function actualizarEnSegundoPlano() {
+  // Si hay algun guardado en marcha (p.ej. se acaba de tocar una pieza o marcar
+  // asistencia), no traigamos datos del servidor ahora: el fetch podria devolver
+  // la version ANTERIOR al guardado y machacar en memoria el cambio recien hecho.
+  // Como cada guardado escribe una foto completa de los datos, ese cambio
+  // "perdido" en memoria acabaria grabandose de verdad en el siguiente guardado.
+  if (guardadosPendientes > 0) return;
   try {
     const all = await sheetReadAll();
+    if (guardadosPendientes > 0) return; // se ha empezado a editar mientras se refrescaba
     await procesarDatos(all);
     guardarCache(all);
     refrescarVistaActual();
