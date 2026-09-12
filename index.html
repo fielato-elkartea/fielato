@@ -438,22 +438,6 @@ function mesesBtns(active, onclick) {
 // ── GRUPOS PIEZAS LOGIC ──
 // calcGruposPiezas removed - turnoActual uses repartos directly
 
-// Piezas realmente cazadas por cada grupo (suma de capturas de sus miembros),
-// para la tabla "Piezas por grupo". Distinto de jab/cor de turnoActual(), que
-// cuenta repartos ya asignados y sirve solo para calcular a quien le toca el
-// siguiente turno.
-function piezasPorGrupoReal() {
-  const jabG={}, corG={};
-  GRUPOS.forEach(g=>{jabG[g]=0;corG[g]=0;});
-  miembros.forEach(m=>{
-    if(m.tipo==="Z/P"||!m.grupo||jabG[m.grupo]===undefined) return;
-    const s=calcStats(m);
-    jabG[m.grupo]+=s.jab;
-    corG[m.grupo]+=s.cor;
-  });
-  return {jabG, corG};
-}
-
 function turnoActual() {
   return calcularTurno(repartos);
 }
@@ -1038,13 +1022,12 @@ function renderSocioFicha(el) {
 }
 
 function renderSocioGrupos(el) {
-  const {jabNext,jabFalta,corNext,corFalta} = turnoActual();
+  const {jab,cor,jabNext,jabFalta,corNext,corFalta} = turnoActual();
   // Total real de piezas cazadas esta temporada (igual que en Admin > Piezas),
   // no el total de repartos ya asignados a un grupo (que puede ir por detras
   // si una captura todavia no se ha repartido a un grupo).
   const totalJabReal = miembros.reduce((s,m)=>s+calcStats(m).jab,0);
   const totalCorReal = miembros.reduce((s,m)=>s+calcStats(m).cor,0);
-  const {jabG:jab,corG:cor} = piezasPorGrupoReal();
 
   let html=`
   <!-- Total temporada -->
@@ -1477,8 +1460,7 @@ function cambiarPieza(mid,esp,delta){
 let repartoMes = "sep", repartoFecha = null;
 
 function renderGruposAdmin(){
-  const {jabNext, jabFalta, corNext, corFalta, totalJab, totalCor} = turnoActual();
-  const {jabG:jab, corG:cor} = piezasPorGrupoReal();
+  const {jabNext, jabFalta, corNext, corFalta, jab, cor, totalJab, totalCor} = turnoActual();
   const todasFechas = [];
   Object.entries(calendario).forEach(([mes,fechas])=>{
     Object.keys(fechas).sort().forEach(f=>todasFechas.push({mes,fecha:cleanDate(f)}));
