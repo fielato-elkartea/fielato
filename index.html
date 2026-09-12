@@ -329,6 +329,7 @@ let tarjetas = {}; // {1: "miembroId" | "ZUBIETA" | "", 2: ..., ... 15: ...}
 let socioTabActual = "buscar";
 let socioSeleccionado = null;
 let grupoExpandido = null;
+let grupoExpandidoAdmin = null;
 let historico = []; // [{fecha, cazadorId, puesto, especie}]
 let historicoTemporada = null;
 let historicoExpandido = null;
@@ -436,6 +437,22 @@ function mesesBtns(active, onclick) {
 
 // ── GRUPOS PIEZAS LOGIC ──
 // calcGruposPiezas removed - turnoActual uses repartos directly
+
+// Piezas realmente cazadas por cada grupo (suma de capturas de sus miembros),
+// para la tabla "Piezas por grupo". Distinto de jab/cor de turnoActual(), que
+// cuenta repartos ya asignados y sirve solo para calcular a quien le toca el
+// siguiente turno.
+function piezasPorGrupoReal() {
+  const jabG={}, corG={};
+  GRUPOS.forEach(g=>{jabG[g]=0;corG[g]=0;});
+  miembros.forEach(m=>{
+    if(m.tipo==="Z/P"||!m.grupo||jabG[m.grupo]===undefined) return;
+    const s=calcStats(m);
+    jabG[m.grupo]+=s.jab;
+    corG[m.grupo]+=s.cor;
+  });
+  return {jabG, corG};
+}
 
 function turnoActual() {
   return calcularTurno(repartos);
@@ -1021,12 +1038,13 @@ function renderSocioFicha(el) {
 }
 
 function renderSocioGrupos(el) {
-  const {jab,cor,jabNext,jabFalta,corNext,corFalta} = turnoActual();
+  const {jabNext,jabFalta,corNext,corFalta} = turnoActual();
   // Total real de piezas cazadas esta temporada (igual que en Admin > Piezas),
   // no el total de repartos ya asignados a un grupo (que puede ir por detras
   // si una captura todavia no se ha repartido a un grupo).
   const totalJabReal = miembros.reduce((s,m)=>s+calcStats(m).jab,0);
   const totalCorReal = miembros.reduce((s,m)=>s+calcStats(m).cor,0);
+  const {jabG:jab,corG:cor} = piezasPorGrupoReal();
 
   let html=`
   <!-- Total temporada -->
@@ -1468,7 +1486,8 @@ function cambiarPieza(mid,esp,delta){
 let repartoMes = "sep", repartoFecha = null;
 
 function renderGruposAdmin(){
-  const {jabNext, jabFalta, corNext, corFalta, jab, cor, totalJab, totalCor} = turnoActual();
+  const {jabNext, jabFalta, corNext, corFalta, totalJab, totalCor} = turnoActual();
+  const {jabG:jab, corG:cor} = piezasPorGrupoReal();
   const todasFechas = [];
   Object.entries(calendario).forEach(([mes,fechas])=>{
     Object.keys(fechas).sort().forEach(f=>todasFechas.push({mes,fecha:cleanDate(f)}));
@@ -1594,13 +1613,23 @@ function renderGruposAdmin(){
   ${GRUPOS.map(g=>{
     const mg=miembros.filter(m=>m.grupo===g&&m.tipo!=="Z/P");
     return `<div class="card" style="margin-bottom:8px">
-      <div style="font-weight:700;color:#d4e8c2;margin-bottom:${mg.length>0?10:0}px">Grupo ${g} <span style="color:#4a7a5a;font-size:12px;font-weight:400">(${mg.length} miembros)</span></div>
-      ${mg.map(m=>{const s=calcStats(m);return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #0d1a10">
-        ${badge(m.tipo)}
-        <span style="flex:1;color:#c8e8c8;font-size:12px">${m.nombre}</span>
-        <span style="color:#e8a84a;font-size:12px">&#128023;${s.jab}</span>
-        <span style="color:#a8d8e8;font-size:12px">&#129420;${s.cor}</span>
-      </div>`;}).join("")}
+      <button onclick="grupoExpandidoAdmin=grupoExpandidoAdmin==='${g}'?null:'${g}';renderGruposAdmin()" style="background:none;border:none;color:inherit;width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <span style="font-weight:700;color:#d4e8c2;font-size:15px">Grupo ${g}</span>
+          <span style="color:#4a7a5a;font-size:12px;margin-left:10px">${mg.length} miembros</span>
+        </div>
+        <span style="color:#4caf70;font-size:18px">${grupoExpandidoAdmin===g?"&#8722;":"&#43;"}</span>
+      </button>
+      ${grupoExpandidoAdmin===g?`
+        <div style="margin-top:12px;border-top:1px solid #1a3020;padding-top:12px">
+          ${mg.length===0?'<div style="color:#2a4a2a;font-size:13px">Sin miembros asignados</div>':
+          mg.map(m=>{const s=calcStats(m);return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #0d1a10">
+            ${badge(m.tipo)}
+            <span style="flex:1;color:#c8e8c8;font-size:12px">${m.nombre}</span>
+            <span style="color:#e8a84a;font-size:12px">&#128023;${s.jab}</span>
+            <span style="color:#a8d8e8;font-size:12px">&#129420;${s.cor}</span>
+          </div>`;}).join("")}
+        </div>`:""}
     </div>`;
   }).join("")}`;
 
