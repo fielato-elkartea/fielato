@@ -1021,18 +1021,23 @@ function renderSocioFicha(el) {
 }
 
 function renderSocioGrupos(el) {
-  const {jab,cor,jabNext,jabFalta,corNext,corFalta,totalJab,totalCor} = turnoActual();
+  const {jab,cor,jabNext,jabFalta,corNext,corFalta} = turnoActual();
+  // Total real de piezas cazadas esta temporada (igual que en Admin > Piezas),
+  // no el total de repartos ya asignados a un grupo (que puede ir por detras
+  // si una captura todavia no se ha repartido a un grupo).
+  const totalJabReal = miembros.reduce((s,m)=>s+calcStats(m).jab,0);
+  const totalCorReal = miembros.reduce((s,m)=>s+calcStats(m).cor,0);
 
   let html=`
   <!-- Total temporada -->
   <div style="display:flex;gap:12px;margin-bottom:12px">
     <div style="flex:1;background:#0d1a10;border:1px solid #1a3020;border-radius:10px;padding:10px 14px;text-align:center">
       <div style="font-size:10px;color:#3a6a3a;text-transform:uppercase">Basurdeak guztira / Total Jabalis</div>
-      <div style="font-size:22px;font-weight:800;color:#e8a84a">${totalJab||0}</div>
+      <div style="font-size:22px;font-weight:800;color:#e8a84a">${totalJabReal||0}</div>
     </div>
     <div style="flex:1;background:#0d1a10;border:1px solid #1a3020;border-radius:10px;padding:10px 14px;text-align:center">
       <div style="font-size:10px;color:#3a6a3a;text-transform:uppercase">Orkatzak guztira / Total Corzos</div>
-      <div style="font-size:22px;font-weight:800;color:#a8d8e8">${totalCor||0}</div>
+      <div style="font-size:22px;font-weight:800;color:#a8d8e8">${totalCorReal||0}</div>
     </div>
   </div>
   <!-- Turno siguiente -->
