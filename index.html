@@ -1452,7 +1452,10 @@ function cambiarPieza(mid,esp,delta){
   m.piezas[mesActivo2][fechaActiva][esp] = nuevoValor;
 
   if(nuevoValor < valorAnterior) {
-    // Se ha quitado una pieza: elimina su fila de detalle (mancha/zona/puesto)
+    // Se ha quitado una pieza: elimina su fila de detalle (mancha/zona/puesto).
+    // Los repartos NO se tocan aqui: solo deben cambiar si se borran a proposito
+    // desde Grupos Piezas (boton eliminar reparto), nunca como efecto secundario
+    // de corregir un conteo de piezas.
     for(let i=capturas.length-1;i>=0;i--){
       if(capturas[i].miembroId===mid && capturas[i].fecha===fechaActiva && capturas[i].especie===esp && capturas[i].idx===valorAnterior){
         capturas.splice(i,1);
@@ -1460,18 +1463,6 @@ function cambiarPieza(mid,esp,delta){
       }
     }
     withSave(()=>saveCapturas());
-
-    // Y elimina el ULTIMO reparto correspondiente a esta fecha+especie
-    // para que el contador de repartos se mantenga en sincronia con los abatidos
-    const especieFull = esp==="jabali" ? "jabali" : "corzo";
-    const fechaC = cleanDate(fechaActiva);
-    for(let i=repartos.length-1; i>=0; i--) {
-      if(repartos[i].fecha===fechaC && repartos[i].especie===especieFull) {
-        repartos.splice(i,1);
-        withSave(()=>saveRepartos());
-        break;
-      }
-    }
   } else if(nuevoValor > valorAnterior) {
     // Se ha anadido una pieza: crea su fila de detalle vacia (mancha/zona/puesto)
     capturas.push({miembroId:mid, fecha:fechaActiva, especie:esp, idx:nuevoValor, mancha:"", zona:"", puesto:""});
