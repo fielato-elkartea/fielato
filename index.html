@@ -1236,11 +1236,13 @@ function renderAsistencia() {
         <th style="text-align:left;min-width:160px;position:sticky;left:0;background:#060e08;z-index:2">Miembro</th>
         <th>Tipo</th>
         ${fechas.map(f=>{
-          const cerrada=!!jornadasCerradas[cleanDate(f)];
+          const fc=cleanDate(f);
+          const cerrada=!!jornadasCerradas[fc];
           return `<th style="min-width:44px">
-            <div class="${cerrada?"dia-cerrado-th":""}" style="${cerrada?"":"color:#4caf70;"}font-size:11px">${cerrada?"&#128274; ":""}${fmtDia(f)}</div>
+            <div class="${cerrada?"dia-cerrado-th":""}" style="${cerrada?"":"color:#4caf70;"}font-size:11px">${fmtDia(f)}</div>
             <div class="${cerrada?"dia-cerrado-sub":""}" style="${cerrada?"":"color:#2d5a3a;"}font-size:10px">${diaAbr(f)}</div>
             <div style="color:${conteoPorFecha[f]>0?"#7ee8a2":"#2a4a2a"};font-size:12px;font-weight:800;margin-top:2px">${conteoPorFecha[f]}</div>
+            <button onclick="${cerrada?`desbloquearJornada('${fc}')`:`validarJornada('${fc}')`}" title="${cerrada?"Desblokeatu / Desbloquear jornada":"Balidatu / Validar jornada"}" style="background:none;border:none;font-size:13px;padding:2px;margin-top:2px;cursor:pointer">${cerrada?"&#128274;":"&#128275;"}</button>
           </th>`;
         }).join("")}
         <th style="color:#d4e870;min-width:50px">Grupo</th>
@@ -1378,11 +1380,11 @@ function cambiarMesPiezas(id){mesActivo2=id;fechaActiva=null;renderPiezas();}
 function setFechaActiva(f){fechaActiva=fechaActiva===f?null:f;renderPiezas();}
 function validarJornada(fecha){
   jornadasCerradas[fecha]=true;
-  renderPiezas();
+  renderTab(adminTabActual);
   withSave(()=>saveJornadas());
 }
 function desbloquearJornada(fecha){
-  if(confirmarEdicionJornada(fecha)) renderPiezas();
+  if(confirmarEdicionJornada(fecha)) renderTab(adminTabActual);
 }
 // Comprueba si una jornada esta cerrada antes de dejar tocar sus capturas. Si lo
 // esta, pide confirmacion y, si el usuario acepta, la reabre para poder editar
