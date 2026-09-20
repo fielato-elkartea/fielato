@@ -102,12 +102,13 @@ function handleRequest(e) {
       sheet.clearContents();
       if (values.length > 0 && values[0].length > 0) {
         var range = sheet.getRange(1, 1, values.length, values[0].length);
-        // Forzar formato de texto plano ANTES de escribir: clearContents() no
-        // borra el formato de celda, asi que una celda que en algun momento
-        // quedo con formato de fecha seguiria reinterpretando como fecha
-        // cualquier valor parecido (p.ej. "5/6" de "Grupo 5/6") en cada
-        // escritura futura, aunque se le pase texto.
+        // Forzar formato de texto plano ANTES de escribir, y con flush() de
+        // por medio: sin el flush, el cambio de formato queda en el buffer de
+        // Apps Script y setValues() sigue viendo el formato viejo, así que
+        // Sheets reinterpreta como fecha cualquier valor parecido (p.ej. "5/6"
+        // de "Grupo 5/6") igualmente.
         range.setNumberFormat("@");
+        SpreadsheetApp.flush();
         range.setValues(values);
       }
       SpreadsheetApp.flush();
