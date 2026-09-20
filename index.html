@@ -1470,63 +1470,63 @@ function renderGruposAdmin(){
 
   let html=`
   <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-    <button onclick="renderGruposAdmin()" style="background:#0d1a10;border:1px solid #1a3020;color:#4a7a5a;border-radius:6px;padding:5px 12px;font-size:12px">&#8635; Actualizar totales</button>
+    <button onclick="renderGruposAdmin()" style="background:#0d1a10;border:1px solid #1a3020;color:#4a7a5a;border-radius:6px;padding:5px 12px;font-size:12px">&#8635; Totalak eguneratu / Actualizar totales</button>
   </div>
   <!-- Total temporada -->
   <div style="display:flex;gap:12px;margin-bottom:12px">
     <div style="flex:1;background:#0d1a10;border:1px solid #1a3020;border-radius:10px;padding:10px 14px;text-align:center">
-      <div style="font-size:10px;color:#3a6a3a;text-transform:uppercase">Total Jabalis repartidos</div>
+      <div style="font-size:10px;color:#3a6a3a;text-transform:uppercase">Basurdeak banatuta / Total Jabalis repartidos</div>
       <div style="font-size:22px;font-weight:800;color:#e8a84a">${totalJab||0}</div>
     </div>
     <div style="flex:1;background:#0d1a10;border:1px solid #1a3020;border-radius:10px;padding:10px 14px;text-align:center">
-      <div style="font-size:10px;color:#3a6a3a;text-transform:uppercase">Total Corzos repartidos</div>
+      <div style="font-size:10px;color:#3a6a3a;text-transform:uppercase">Orkatzak banatuta / Total Corzos repartidos</div>
       <div style="font-size:22px;font-weight:800;color:#a8d8e8">${totalCor||0}</div>
     </div>
   </div>
   <!-- Turno siguiente -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
     <div class="turno-jab">
-      <div style="font-size:10px;color:#e8a84a;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Siguiente Jabali</div>
+      <div style="font-size:10px;color:#e8a84a;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Hurrengo basurdea / Siguiente Jabali</div>
       <div style="font-size:24px;font-weight:800;color:#e8c27e;white-space:nowrap">Grupo ${jabNext||"?"}</div>
-      <div style="font-size:12px;color:#a87a3a;margin-top:4px">Faltan ${jabFalta||0} por entregar</div>
+      <div style="font-size:12px;color:#a87a3a;margin-top:4px">${jabFalta||0} falta emateko / Faltan ${jabFalta||0} por entregar</div>
     </div>
     <div class="turno-cor">
-      <div style="font-size:10px;color:#a8d8e8;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Siguiente Corzo</div>
+      <div style="font-size:10px;color:#a8d8e8;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Hurrengo orkatza / Siguiente Corzo</div>
       <div style="font-size:24px;font-weight:800;color:#c8e8f0;white-space:nowrap">Grupo ${corNext||"?"}</div>
-      <div style="font-size:12px;color:#4a8aa8;margin-top:4px">Faltan ${corFalta||0} por entregar</div>
+      <div style="font-size:12px;color:#4a8aa8;margin-top:4px">${corFalta||0} falta emateko / Faltan ${corFalta||0} por entregar</div>
     </div>
   </div>
 
   <!-- REPARTO DE PIEZAS YA ABATIDAS -->
   <div class="card" style="margin-bottom:20px">
-    <div style="font-size:11px;color:#4a7a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Repartir piezas de una batida</div>
-    <div style="font-size:11px;color:#3a5a4a;margin-bottom:14px">Las cantidades se toman directamente de lo anotado en la pestaña Piezas. Aquí solo se decide a qué grupo se entrega cada una.</div>
+    <div style="font-size:11px;color:#4a7a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Batida bateko piezak banatu / Repartir piezas de una batida</div>
+    <div style="font-size:11px;color:#3a5a4a;margin-bottom:14px">Kopuruak Piezak fitxan apuntatutakotik hartzen dira zuzenean. Hemen erabakitzen da zein talderi ematen zaion bakoitza. / Las cantidades se toman directamente de lo anotado en la pestaña Piezas. Aquí solo se decide a qué grupo se entrega cada una.</div>
 
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
       <div style="display:flex;flex-direction:column;gap:4px">
-        <label style="font-size:11px;color:#4a7a5a">Fecha batida</label>
+        <label style="font-size:11px;color:#4a7a5a">Batidaren data / Fecha batida</label>
         <select id="reparto-fecha" class="input" style="width:160px" onchange="actualizarTotalesFecha()">
-          <option value="">Seleccionar...</option>
+          <option value="">Aukeratu... / Seleccionar...</option>
           ${todasFechas.map(b=>`<option value="${b.fecha}">${fmtDia(b.fecha)} ${diaAbr(b.fecha)}</option>`).join("")}
         </select>
       </div>
       <div id="totales-fecha-display" style="display:none;background:#0a1208;border:1px solid #1a3020;border-radius:8px;padding:10px 16px">
-        <div style="font-size:10px;color:#4a7a5a;text-transform:uppercase;margin-bottom:4px">Abatidos esta batida</div>
+        <div style="font-size:10px;color:#4a7a5a;text-transform:uppercase;margin-bottom:4px">Batida honetan harrapatutakoak / Abatidos esta batida</div>
         <div style="display:flex;gap:14px">
           <span style="color:#e8a84a;font-weight:700">&#128023; <span id="tot-jab-fecha">0</span></span>
           <span style="color:#a8d8e8;font-weight:700">&#129420; <span id="tot-cor-fecha">0</span></span>
         </div>
       </div>
-      <button onclick="generarPropuesta()" style="background:#1a3a4d;border:1px solid #2d5a6a;color:#e8f5e2;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600">Proponer reparto</button>
+      <button onclick="generarPropuesta()" style="background:#1a3a4d;border:1px solid #2d5a6a;color:#e8f5e2;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600">Banaketa proposatu / Proponer reparto</button>
     </div>
 
     <!-- Propuesta editable -->
     <div id="propuesta-container" style="display:none">
-      <div style="font-size:11px;color:#4a7a5a;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;border-top:1px solid #1a3020;padding-top:12px">Propuesta de reparto — edita si es necesario</div>
+      <div style="font-size:11px;color:#4a7a5a;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;border-top:1px solid #1a3020;padding-top:12px">Banaketa proposamena — beharrezkoa bada editatu / Propuesta de reparto — edita si es necesario</div>
       <div id="propuesta-lista"></div>
       <div style="display:flex;gap:10px;margin-top:14px">
-        <button onclick="confirmarReparto()" style="background:#1e4d33;border:1px solid #3d8a5f;color:#e8f5e2;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;flex:1">&#10003; Confirmar y guardar</button>
-        <button onclick="cancelarPropuesta()" style="background:#1a0808;border:1px solid #4a1a1a;color:#e87a7a;border-radius:8px;padding:10px 16px;font-size:13px">Cancelar</button>
+        <button onclick="confirmarReparto()" style="background:#1e4d33;border:1px solid #3d8a5f;color:#e8f5e2;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;flex:1">&#10003; Berretsi eta gorde / Confirmar y guardar</button>
+        <button onclick="cancelarPropuesta()" style="background:#1a0808;border:1px solid #4a1a1a;color:#e87a7a;border-radius:8px;padding:10px 16px;font-size:13px">Ezeztatu / Cancelar</button>
       </div>
     </div>
     <div id="reparto-msg" style="margin-top:10px;font-size:13px;display:none"></div>
@@ -1536,12 +1536,12 @@ function renderGruposAdmin(){
   <div class="overflow-x" style="margin-bottom:20px">
   <table>
     <thead><tr>
-      <th style="text-align:left;min-width:80px">Grupo</th>
-      <th style="color:#e8a84a">&#128023; Jabalis entregados</th>
-      <th style="color:#a8d8e8">&#129420; Corzos entregados</th>
-      <th>Cuota Jab.</th>
-      <th>Cuota Cor.</th>
-      <th>Miembros</th>
+      <th style="text-align:left;min-width:80px">Taldea / Grupo</th>
+      <th style="color:#e8a84a">&#128023; Emanak / Entregados</th>
+      <th style="color:#a8d8e8">&#129420; Emanak / Entregados</th>
+      <th>Kuota Bas. / Cuota Jab.</th>
+      <th>Kuota Ork. / Cuota Cor.</th>
+      <th>Kideak / Miembros</th>
     </tr></thead>
     <tbody>
       ${GRUPOS.map((g,i)=>{
@@ -1564,27 +1564,27 @@ function renderGruposAdmin(){
   </div>
 
   <!-- Historial repartos -->
-  <div style="font-size:11px;color:#4a7a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Historial de repartos (${repartos.length})</div>
-  ${repartos.length===0?'<div style="color:#2a4a2a;padding:16px">Sin repartos registrados</div>':
+  <div style="font-size:11px;color:#4a7a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Banaketen historia / Historial de repartos (${repartos.length})</div>
+  ${repartos.length===0?'<div style="color:#2a4a2a;padding:16px">Ez dago banaketarik erregistratuta / Sin repartos registrados</div>':
     `<div class="overflow-x"><table>
       <thead><tr>
-        <th style="text-align:left">Fecha</th>
-        <th>Especie</th>
-        <th>Grupo</th>
-        <th>Eliminar</th>
+        <th style="text-align:left">Data / Fecha</th>
+        <th>Espeziea / Especie</th>
+        <th>Taldea / Grupo</th>
+        <th>Ezabatu / Eliminar</th>
       </tr></thead>
       <tbody>
         ${[...repartos].reverse().map((r,i)=>`<tr style="background:${i%2===0?"#0d1a10":"#0a1208"}">
           <td style="text-align:left;padding:6px 10px;color:#c8e8c8">${fmtDia(r.fecha)}</td>
-          <td style="${r.especie==="jabali"?"color:#e8a84a":"color:#a8d8e8"};font-weight:600">${r.especie==="jabali"?"&#128023; Jabali":"&#129420; Corzo"}</td>
-          <td style="color:#d4e870;font-weight:700">Grupo ${r.grupo}</td>
+          <td style="${r.especie==="jabali"?"color:#e8a84a":"color:#a8d8e8"};font-weight:600">${r.especie==="jabali"?"&#128023; Basurdea / Jabali":"&#129420; Orkatza / Corzo"}</td>
+          <td style="color:#d4e870;font-weight:700">Taldea ${r.grupo} / Grupo ${r.grupo}</td>
           <td><button onclick="eliminarReparto(${repartos.length-1-i})" style="background:#1a0808;border:1px solid #4a1a1a;color:#e87a7a;border-radius:5px;padding:2px 8px;font-size:11px">&#10005;</button></td>
         </tr>`).join("")}
       </tbody>
     </table></div>`}
 
   <!-- Integrantes por grupo -->
-  <div style="font-size:11px;color:#4a7a5a;letter-spacing:2px;text-transform:uppercase;margin:20px 0 12px">Integrantes por grupo</div>
+  <div style="font-size:11px;color:#4a7a5a;letter-spacing:2px;text-transform:uppercase;margin:20px 0 12px">Taldeko kideak / Integrantes por grupo</div>
   ${GRUPOS.map(g=>{
     const mg=miembros.filter(m=>m.grupo===g&&m.tipo!=="Z/P");
     return `<div class="card" style="margin-bottom:8px">
@@ -1597,7 +1597,7 @@ function renderGruposAdmin(){
       </button>
       ${grupoExpandidoAdmin===g?`
         <div style="margin-top:12px;border-top:1px solid #1a3020;padding-top:12px">
-          ${mg.length===0?'<div style="color:#2a4a2a;font-size:13px">Sin miembros asignados</div>':
+          ${mg.length===0?'<div style="color:#2a4a2a;font-size:13px">Ez dago kiderik esleituta / Sin miembros asignados</div>':
           mg.map(m=>{const s=calcStats(m);return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #0d1a10">
             ${badge(m.tipo)}
             <span style="flex:1;color:#c8e8c8;font-size:12px">${m.nombre}</span>
@@ -1643,10 +1643,10 @@ function generarPropuesta() {
   const fecha = document.getElementById("reparto-fecha").value;
   const msg = document.getElementById("reparto-msg");
   const container = document.getElementById("propuesta-container");
-  if(!fecha) { msg.style.display="block"; msg.style.color="#e87a7a"; msg.textContent="Selecciona una fecha de batida"; return; }
+  if(!fecha) { msg.style.display="block"; msg.style.color="#e87a7a"; msg.textContent="Aukeratu batida baten data / Selecciona una fecha de batida"; return; }
 
   const {jab:totJab, cor:totCor} = totalesPiezasFecha(fecha);
-  if(totJab===0 && totCor===0) { msg.style.display="block"; msg.style.color="#e87a7a"; msg.textContent="No hay piezas anotadas para esta batida en la pestaña Piezas"; return; }
+  if(totJab===0 && totCor===0) { msg.style.display="block"; msg.style.color="#e87a7a"; msg.textContent="Ez dago piezarik apuntatuta batida honetarako Piezak fitxan / No hay piezas anotadas para esta batida en la pestaña Piezas"; return; }
 
   const yaJab = repartos.filter(r=>r.fecha===cleanDate(fecha)&&r.especie==="jabali").length;
   const yaCor = repartos.filter(r=>r.fecha===cleanDate(fecha)&&r.especie==="corzo").length;
@@ -1655,7 +1655,7 @@ function generarPropuesta() {
 
   if(nuevosJab===0 && nuevosCor===0) {
     msg.style.display="block"; msg.style.color="#4a7a9a";
-    msg.textContent = "Todas las piezas de esta batida ya están repartidas (" + yaJab + " jabali, " + yaCor + " corzo)";
+    msg.textContent = "Batida honetako piezak jadanik banatuta daude (" + yaJab + " basurde, " + yaCor + " orkatz) / Todas las piezas de esta batida ya están repartidas (" + yaJab + " jabali, " + yaCor + " corzo)";
     container.style.display="none";
     return;
   }
@@ -1685,8 +1685,8 @@ function renderPropuestaLista() {
   lista.innerHTML = propuestaPendiente.map((p,i)=>`
     <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1a3020">
       <span style="font-size:18px">${p.especie==="jabali"?"&#128023;":"&#129420;"}</span>
-      <span style="color:${p.especie==="jabali"?"#e8a84a":"#a8d8e8"};font-weight:600;min-width:60px">${p.especie==="jabali"?"Jabali":"Corzo"}</span>
-      <span style="color:#4a7a5a;font-size:12px">&#8594; Grupo</span>
+      <span style="color:${p.especie==="jabali"?"#e8a84a":"#a8d8e8"};font-weight:600;min-width:60px">${p.especie==="jabali"?"Basurdea / Jabali":"Orkatza / Corzo"}</span>
+      <span style="color:#4a7a5a;font-size:12px">&#8594; Taldea / Grupo</span>
       <select onchange="editarPropuesta(${i},this.value)" style="background:#0a1208;border:1px solid ${p.especie==="jabali"?"#3a2a10":"#10203a"};color:#d4e870;border-radius:6px;padding:4px 8px;font-size:13px;font-weight:700;outline:none">
         ${GRUPOS.map(g=>`<option value="${g}" ${g===p.grupo?"selected":""}>${g==="5/6"?"Grupo 5/6":"Grupo "+g}</option>`).join("")}
       </select>
@@ -1712,7 +1712,7 @@ function confirmarReparto() {
   if(!propuestaPendiente.length) return;
   repartos.push(...propuestaPendiente);
   const msg = document.getElementById("reparto-msg");
-  if(msg){ msg.style.display="block"; msg.style.color="#4caf70"; msg.textContent="Guardados "+propuestaPendiente.length+" repartos correctamente"; }
+  if(msg){ msg.style.display="block"; msg.style.color="#4caf70"; msg.textContent=propuestaPendiente.length+" banaketa ondo gorde dira / Guardados "+propuestaPendiente.length+" repartos correctamente"; }
   const n = propuestaPendiente.length;
   propuestaPendiente=[];
   withSave(()=>saveRepartos());
@@ -1720,7 +1720,7 @@ function confirmarReparto() {
 }
 
 function eliminarReparto(idx) {
-  if(!confirm("¿Eliminar este reparto?")) return;
+  if(!confirm("Banaketa hau ezabatu? / ¿Eliminar este reparto?")) return;
   repartos.splice(idx, 1);
   withSave(()=>saveRepartos());
   renderGruposAdmin();
