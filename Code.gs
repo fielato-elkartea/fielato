@@ -1,14 +1,8 @@
 var ADMIN_PIN = "fielatogestioa";
-// Marca de version temporal, solo para comprobar que una implementacion nueva
-// esta realmente en marcha. Se puede borrar despues.
-var CODE_VERSION = "v3-formula-escape-2026-09-20";
 
 function doGet(e) {
   // Sin parametro "action": es una visita normal desde el navegador -> servir la app.
   // Con "action": es una llamada de datos de la propia app -> servir JSON como antes.
-  if (e.parameter && e.parameter.action === "version") {
-    return out({version: CODE_VERSION});
-  }
   if (!e.parameter || !e.parameter.action) {
     return HtmlService.createHtmlOutputFromFile('Index')
       .setTitle('Fielato')
