@@ -102,14 +102,21 @@ function handleRequest(e) {
       sheet.clearContents();
       if (values.length > 0 && values[0].length > 0) {
         var range = sheet.getRange(1, 1, values.length, values[0].length);
-        // Forzar formato de texto plano ANTES de escribir, y con flush() de
-        // por medio: sin el flush, el cambio de formato queda en el buffer de
-        // Apps Script y setValues() sigue viendo el formato viejo, así que
-        // Sheets reinterpreta como fecha cualquier valor parecido (p.ej. "5/6"
-        // de "Grupo 5/6") igualmente.
         range.setNumberFormat("@");
-        SpreadsheetApp.flush();
-        range.setValues(values);
+        // setNumberFormat("@") por si solo NO evita que setValues() reinterprete
+        // texto como "5/6" (de "Grupo 5/6") como una fecha: Sheets aplica esa
+        // deteccion automatica al ENTRAR el valor, sin mirar el formato de la
+        // celda. La proteccion real es escribir esos valores como formula de
+        // texto (="5/6"), que Sheets evalua literalmente sin tocarla.
+        var protegidos = values.map(function(row) {
+          return row.map(function(v) {
+            if (typeof v === "string" && /^\d{1,2}\/\d{1,2}$/.test(v)) {
+              return '="' + v.replace(/"/g, '""') + '"';
+            }
+            return v;
+          });
+        });
+        range.setValues(protegidos);
       }
       SpreadsheetApp.flush();
       return out({ok: true, rows: values.length});
