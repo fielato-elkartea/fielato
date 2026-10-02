@@ -2062,10 +2062,28 @@ async function exportarExcel() {
   ws.views = [{state:"frozen", xSplit:3, ySplit:2}];
 
   const buf = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buf], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const nombreArchivo = "fielato_tabla_"+new Date().toISOString().slice(0,10)+".xlsx";
+  const tipo = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+  // En movil (sobre todo iPhone/Safari) la descarga con <a download> a veces
+  // solo abre una vista previa ambigua en vez de guardar el archivo. Si el
+  // navegador soporta compartir archivos (Web Share API), se usa eso para
+  // que salga el menu nativo de "Guardar en Archivos" / compartir.
+  const file = new File([buf], nombreArchivo, {type: tipo});
+  if (navigator.canShare && navigator.canShare({files: [file]})) {
+    try {
+      await navigator.share({files: [file], title: nombreArchivo});
+      return;
+    } catch(e) {
+      // Si el usuario cancela el menu de compartir, no hace falta avisar de error.
+      if (e && e.name === "AbortError") return;
+    }
+  }
+
+  const blob = new Blob([buf], {type: tipo});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
-  a.download="fielato_tabla_"+new Date().toISOString().slice(0,10)+".xlsx";
+  a.download=nombreArchivo;
   a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
 }
