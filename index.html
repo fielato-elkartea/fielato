@@ -253,6 +253,7 @@ td { padding: 5px; border: 1px solid #111a11; text-align: center; }
         <div style="font-size:17px;font-weight:700;color:#e8f5e2">Panel de Gestion</div>
       </div>
       <span id="saving-indicator" style="display:none;color:#4caf70;font-size:12px">Gordetzen... / Guardando...</span>
+      <span id="cola-indicator" style="display:none;color:#e8a84a;font-size:12px;font-weight:600"></span>
       <button onclick="init()" style="background:#0d1a10;border:1px solid #1a3020;color:#4a7a5a;border-radius:8px;padding:5px 12px;font-size:12px">Birkargatu / Recargar</button>
       <button onclick="cerrarSesionAdmin()" style="background:none;border:none;color:#3a6a3a;font-size:11px">Saioa itxi / Cerrar sesión</button>
     </div>
@@ -355,8 +356,30 @@ async function sheetReadAll() {
   if (d && d.error) throw new Error(d.error);
   return d || {};
 }
-async function sheetWrite(range, values) {
-  const sheet = range.split("!")[0];
+// ── COLA DE GUARDADO PENDIENTE ──
+// Si falla la subida (sin cobertura, wifi cortado, etc.) el cambio no se
+// pierde: se guarda primero aqui, en el propio movil, y se reintenta solo en
+// cuanto haya conexion (al recuperar red, al reabrir la app, o cada vez que
+// se refresca en segundo plano). Solo se quita de la cola cuando el servidor
+// confirma que lo ha recibido de verdad.
+const COLA_KEY = "fielato_cola_guardado";
+function leerCola() {
+  try { return JSON.parse(localStorage.getItem(COLA_KEY) || "{}"); } catch(e) { return {}; }
+}
+function guardarColaEnDisco(cola) {
+  try { localStorage.setItem(COLA_KEY, JSON.stringify(cola)); } catch(e) {}
+}
+function actualizarIndicadorCola() {
+  const el = document.getElementById("cola-indicator");
+  if(!el) return;
+  const n = Object.keys(leerCola()).length;
+  el.style.display = n>0 ? "inline" : "none";
+  el.textContent = n===1
+    ? "⚠ 1 cambio sin subir, se reintenta solo"
+    : `⚠ ${n} cambios sin subir, se reintenta solo`;
+}
+
+async function intentarEscribirSheet(sheet, values) {
   const fd = new FormData();
   fd.append("action", "write");
   fd.append("sheet", sheet);
@@ -367,6 +390,49 @@ async function sheetWrite(range, values) {
   const t = await res.text();
   const d = JSON.parse(t);
   if (d && d.error) throw new Error(d.error);
+}
+
+async function sheetWrite(range, values) {
+  const sheet = range.split("!")[0];
+
+  const cola = leerCola();
+  cola[sheet] = values;
+  guardarColaEnDisco(cola);
+  actualizarIndicadorCola();
+
+  let ultimoError;
+  for (let intento=0; intento<3; intento++) {
+    try {
+      await intentarEscribirSheet(sheet, values);
+      const colaActual = leerCola();
+      delete colaActual[sheet];
+      guardarColaEnDisco(colaActual);
+      actualizarIndicadorCola();
+      return;
+    } catch(e) {
+      ultimoError = e;
+      if (intento<2) await new Promise(r=>setTimeout(r, 1000*(intento+1)));
+    }
+  }
+  throw ultimoError;
+}
+
+// Reintenta todo lo que haya quedado pendiente en la cola. Se llama al abrir
+// la app, al recuperar conexion, y en cada refresco en segundo plano.
+async function procesarColaGuardado() {
+  const cola = leerCola();
+  const sheets = Object.keys(cola);
+  for (const sheet of sheets) {
+    try {
+      await intentarEscribirSheet(sheet, cola[sheet]);
+      const colaActual = leerCola();
+      delete colaActual[sheet];
+      guardarColaEnDisco(colaActual);
+    } catch(e) {
+      // Sigue sin haber conexion: se queda en la cola para la proxima vez.
+    }
+  }
+  actualizarIndicadorCola();
 }
 
 // ── HELPERS ──
@@ -421,7 +487,7 @@ async function withSave(fn) {
     await fn();
   } catch(e) {
     console.error("Save error:", e);
-    alert("No se ha podido guardar: " + e.message);
+    alert("Sin conexión ahora mismo. El cambio se ha guardado en el teléfono y se subirá solo en cuanto haya cobertura (" + e.message + ")");
   } finally {
     guardadosPendientes=Math.max(0,guardadosPendientes-1);
     if(guardadosPendientes===0) saving(false);
@@ -508,6 +574,9 @@ function calcularTurno(repartosList) {
 const CACHE_KEY = "fielato_cache_v1";
 
 async function init() {
+  actualizarIndicadorCola();
+  procesarColaGuardado(); // reintenta en cuanto haya conexion lo que quedo pendiente de antes
+
   const cached = leerCache();
   if (cached) {
     // Render instantly from what we saved last time, then quietly refresh in the background
@@ -527,6 +596,7 @@ async function init() {
     showScreen("screen-error");
   }
 }
+window.addEventListener("online", procesarColaGuardado);
 
 function leerCache() {
   try {
@@ -543,10 +613,12 @@ async function actualizarEnSegundoPlano() {
   // la version ANTERIOR al guardado y machacar en memoria el cambio recien hecho.
   // Como cada guardado escribe una foto completa de los datos, ese cambio
   // "perdido" en memoria acabaria grabandose de verdad en el siguiente guardado.
-  if (guardadosPendientes > 0) return;
+  // Tampoco si queda algo pendiente de subir en la cola: ese cambio aun no
+  // esta confirmado por el servidor, y un refresco ahora lo pisaria igual.
+  if (guardadosPendientes > 0 || Object.keys(leerCola()).length > 0) return;
   try {
     const all = await sheetReadAll();
-    if (guardadosPendientes > 0) return; // se ha empezado a editar mientras se refrescaba
+    if (guardadosPendientes > 0 || Object.keys(leerCola()).length > 0) return; // se ha empezado a editar mientras se refrescaba
     await procesarDatos(all);
     guardarCache(all);
     refrescarVistaActual();
