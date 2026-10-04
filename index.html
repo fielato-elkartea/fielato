@@ -1131,13 +1131,14 @@ function renderSocioGrupos(el) {
   <!-- Tabla grupos -->
   <div class="card" style="margin-bottom:20px">
     <div style="font-size:11px;color:#4a7a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">Taldeka piezak / Piezas por grupo</div>
+    <div class="overflow-x">
     <table>
       <thead><tr>
         <th style="text-align:left">Grupo</th>
-        <th style="color:#e8a84a">&#128023; Jabalis</th>
-        <th style="color:#a8d8e8">&#129420; Corzos</th>
-        <th>Cuota Jab.</th>
-        <th>Cuota Cor.</th>
+        <th style="color:#e8a84a;white-space:nowrap">&#128023; Jabalis</th>
+        <th style="color:#a8d8e8;white-space:nowrap">&#129420; Corzos</th>
+        <th style="white-space:nowrap">Cuota Jab.</th>
+        <th style="white-space:nowrap">Cuota Cor.</th>
       </tr></thead>
       <tbody>
         ${GRUPOS.map((g,i)=>`
@@ -1154,6 +1155,7 @@ function renderSocioGrupos(el) {
           </tr>`).join("")}
       </tbody>
     </table>
+    </div>
   </div>
 
   <!-- Historial de repartos -->
