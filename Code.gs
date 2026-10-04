@@ -1,5 +1,40 @@
 var ADMIN_PIN = "fielatogestioa";
 
+// El grupo "5/6" (con barra) hace que Sheets lo confunda con una fecha, y esto
+// pasa incluso escribiendolo como formula de texto si hay mas de uno en la
+// misma escritura: la "limpieza automatica de datos" de Sheets "corrige" todas
+// las celdas menos la primera, por mucho que el valor ya sea texto literal. La
+// solucion robusta es no usar nunca "/" para el grupo DENTRO de la hoja: se
+// guarda como "5-6" (con guion, que Sheets no confunde con nada) y se vuelve a
+// mostrar como "5/6" al leer, de forma transparente para la app.
+var COLUMNAS_GRUPO = { "Repartos": 2, "Miembros": 3 };
+
+function protegerGrupo(sheetName, values) {
+  var colIdx = COLUMNAS_GRUPO[sheetName];
+  if (colIdx === undefined) return values;
+  return values.map(function(row) {
+    var copia = row.slice();
+    var v = copia[colIdx];
+    if (typeof v === "string" && /^\d{1,2}\/\d{1,2}$/.test(v)) {
+      copia[colIdx] = v.replace("/", "-");
+    }
+    return copia;
+  });
+}
+
+function restaurarGrupo(sheetName, data) {
+  var colIdx = COLUMNAS_GRUPO[sheetName];
+  if (colIdx === undefined) return data;
+  return data.map(function(row) {
+    var copia = row.slice();
+    var v = copia[colIdx];
+    if (typeof v === "string" && /^\d{1,2}-\d{1,2}$/.test(v)) {
+      copia[colIdx] = v.replace("-", "/");
+    }
+    return copia;
+  });
+}
+
 function doGet(e) {
   // Sin parametro "action": es una visita normal desde el navegador -> servir la app.
   // Con "action": es una llamada de datos de la propia app -> servir JSON como antes.
@@ -64,13 +99,14 @@ function handleRequest(e) {
         var sh = ss.getSheetByName(name);
         if (!sh) { result[name] = []; return; }
         var data = sh.getDataRange().getValues();
-        result[name] = data.map(function(row) {
+        var clean = data.map(function(row) {
           return row.map(function(cell) {
             if (cell instanceof Date) return Utilities.formatDate(cell, tzAll, "yyyy-MM-dd");
             if (cell === null || cell === undefined) return "";
             return cell;
           });
         });
+        result[name] = restaurarGrupo(name, clean);
       });
       return out(result);
     }
@@ -92,7 +128,7 @@ function handleRequest(e) {
           return cell;
         });
       });
-      return out(clean);
+      return out(restaurarGrupo(sheetName, clean));
     }
 
     if (action === "write") {
@@ -103,20 +139,7 @@ function handleRequest(e) {
       if (values.length > 0 && values[0].length > 0) {
         var range = sheet.getRange(1, 1, values.length, values[0].length);
         range.setNumberFormat("@");
-        // setNumberFormat("@") por si solo NO evita que setValues() reinterprete
-        // texto como "5/6" (de "Grupo 5/6") como una fecha: Sheets aplica esa
-        // deteccion automatica al ENTRAR el valor, sin mirar el formato de la
-        // celda. La proteccion real es escribir esos valores como formula de
-        // texto (="5/6"), que Sheets evalua literalmente sin tocarla.
-        var protegidos = values.map(function(row) {
-          return row.map(function(v) {
-            if (typeof v === "string" && /^\d{1,2}\/\d{1,2}$/.test(v)) {
-              return '="' + v.replace(/"/g, '""') + '"';
-            }
-            return v;
-          });
-        });
-        range.setValues(protegidos);
+        range.setValues(protegerGrupo(sheetName, values));
       }
       SpreadsheetApp.flush();
       return out({ok: true, rows: values.length});
