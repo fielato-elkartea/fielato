@@ -1380,7 +1380,11 @@ function renderPiezas(){
   if(!fechas.length){
     html+='<div style="text-align:center;color:#2a4a2a;padding:40px"><div style="font-size:40px">&#128197;</div><div style="margin-top:10px">Sin batidas en este mes</div></div>';
   } else {
-    html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">${fechas.map(f=>`<button onclick="setFechaActiva('${cleanDate(f)}')" style="background:${fechaActiva===cleanDate(f)?"#2d3a1a":"#0d1a10"};border:1px solid ${fechaActiva===cleanDate(f)?"#7a9a3a":"#1a3020"};color:${fechaActiva===cleanDate(f)?"#d4e870":"#4a7a5a"};border-radius:10px;padding:8px 16px;font-size:13px;font-weight:${fechaActiva===cleanDate(f)?700:400}">${fmtDia(f)} <span style="font-size:11px;opacity:.7">${diaAbr(f)}</span></button>`).join("")}</div>`;
+    html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">${fechas.map(f=>{
+      const fc=cleanDate(f);
+      const {jab:jabFecha,cor:corFecha}=totalesPiezasFecha(fc);
+      return `<button onclick="setFechaActiva('${fc}')" style="background:${fechaActiva===fc?"#2d3a1a":"#0d1a10"};border:1px solid ${fechaActiva===fc?"#7a9a3a":"#1a3020"};color:${fechaActiva===fc?"#d4e870":"#4a7a5a"};border-radius:10px;padding:8px 16px;font-size:13px;font-weight:${fechaActiva===fc?700:400}">${fmtDia(f)} <span style="font-size:11px;opacity:.7">${diaAbr(f)}</span>${(jabFecha||corFecha)?`<div style="margin-top:3px;font-size:11px;font-weight:700">${jabFecha?`<span style="color:#e8a84a">${jabFecha}</span>`:""}${jabFecha&&corFecha?" · ":""}${corFecha?`<span style="color:#a8d8e8">${corFecha}</span>`:""}</div>`:""}</button>`;
+    }).join("")}</div>`;
     if(fechaActiva){
       const manchaNombres = Object.keys(manchas).sort();
       const presentes=miembros.filter(m=>m.tipo!=="Z/P"&&!!((m.batidas[mesActivo2]||{})[fechaActiva]));
