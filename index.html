@@ -702,8 +702,8 @@ async function procesarDatos(all) {
         const esp = String(r[1]||"").toLowerCase().trim();
         const grp = String(r[2]||"").trim();
         const fec = cleanDate(r[0]);
-        // Only valid repartos with correct especie and grupo
-        if(fec && (esp==="jabali"||esp==="corzo") && GRUPOS.includes(grp)) {
+        // Only valid repartos with correct especie y grupo (o el descarte "no aprovechable")
+        if(fec && (esp==="jabali"||esp==="corzo") && (GRUPOS.includes(grp)||grp===DESCARTE_GRUPO)) {
           repartos.push({fecha:fec, especie:esp, grupo:grp});
         }
       });
@@ -1173,7 +1173,7 @@ function renderSocioGrupos(el) {
           return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #0d1a10">
             <span style="font-size:18px">${esJabali?"&#128023;":"&#129420;"}</span>
             <span style="flex:1;color:#9abb9a;font-size:12px">${fmtDiaAnio(r.fecha)}</span>
-            <span style="color:${color};font-weight:700;font-size:13px">Grupo ${r.grupo}</span>
+            <span style="color:${r.grupo===DESCARTE_GRUPO?"#e87a7a":color};font-weight:700;font-size:13px">${r.grupo===DESCARTE_GRUPO?"&#128465; Ez aprobetxagarria / No aprovechable":"Grupo "+r.grupo}</span>
           </div>`;
         }).join("")}
         ${!repartosHistTodos && ordenados.length>10?`<button onclick="repartosHistTodos=true;renderSocioTab()" style="width:100%;background:none;border:none;color:#4caf70;font-size:12px;font-weight:600;padding:10px 0 2px;text-align:center">Guztiak ikusi / Ver todos (${ordenados.length})</button>`:""}
@@ -1659,7 +1659,7 @@ function renderGruposAdmin(){
         ${[...repartos].reverse().map((r,i)=>`<tr style="background:${i%2===0?"#0d1a10":"#0a1208"}">
           <td style="text-align:left;padding:6px 10px;color:#c8e8c8">${fmtDia(r.fecha)}</td>
           <td style="${r.especie==="jabali"?"color:#e8a84a":"color:#a8d8e8"};font-weight:600">${r.especie==="jabali"?"&#128023; Basurdea / Jabali":"&#129420; Orkatza / Corzo"}</td>
-          <td style="color:#d4e870;font-weight:700">Taldea ${r.grupo} / Grupo ${r.grupo}</td>
+          <td style="color:${r.grupo===DESCARTE_GRUPO?"#e87a7a":"#d4e870"};font-weight:700">${r.grupo===DESCARTE_GRUPO?"&#128465; Ez aprobetxagarria / No aprovechable":"Taldea "+r.grupo+" / Grupo "+r.grupo}</td>
           <td><button onclick="eliminarReparto(${repartos.length-1-i})" style="background:#1a0808;border:1px solid #4a1a1a;color:#e87a7a;border-radius:5px;padding:2px 8px;font-size:11px">&#10005;</button></td>
         </tr>`).join("")}
       </tbody>
@@ -1762,22 +1762,45 @@ function generarPropuesta() {
   container.style.display="block";
 }
 
+const DESCARTE_GRUPO = "DESCARTE";
+
 function renderPropuestaLista() {
   const lista = document.getElementById("propuesta-lista");
-  lista.innerHTML = propuestaPendiente.map((p,i)=>`
+  lista.innerHTML = propuestaPendiente.map((p,i)=>{
+    const descartada = p.grupo===DESCARTE_GRUPO;
+    return `
     <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1a3020">
       <span style="font-size:18px">${p.especie==="jabali"?"&#128023;":"&#129420;"}</span>
       <span style="color:${p.especie==="jabali"?"#e8a84a":"#a8d8e8"};font-weight:600;min-width:60px">${p.especie==="jabali"?"Basurdea / Jabali":"Orkatza / Corzo"}</span>
-      <span style="color:#4a7a5a;font-size:12px">&#8594; Taldea / Grupo</span>
-      <select onchange="editarPropuesta(${i},this.value)" style="background:#0a1208;border:1px solid ${p.especie==="jabali"?"#3a2a10":"#10203a"};color:#d4e870;border-radius:6px;padding:4px 8px;font-size:13px;font-weight:700;outline:none">
-        ${GRUPOS.map(g=>`<option value="${g}" ${g===p.grupo?"selected":""}>${g==="5/6"?"Grupo 5/6":"Grupo "+g}</option>`).join("")}
-      </select>
+      ${descartada?`
+        <span style="flex:1;color:#e87a7a;font-size:12px;font-weight:600">&#128465; Ez da aprobetxagarria (gaixo) / No aprovechable (enferma)</span>
+        <button onclick="deshacerDescarte(${i})" style="background:none;border:none;color:#4a7a5a;font-size:11px;text-decoration:underline;cursor:pointer">Desegin / Deshacer</button>
+      `:`
+        <span style="color:#4a7a5a;font-size:12px">&#8594; Taldea / Grupo</span>
+        <select onchange="editarPropuesta(${i},this.value)" style="background:#0a1208;border:1px solid ${p.especie==="jabali"?"#3a2a10":"#10203a"};color:#d4e870;border-radius:6px;padding:4px 8px;font-size:13px;font-weight:700;outline:none">
+          ${GRUPOS.map(g=>`<option value="${g}" ${g===p.grupo?"selected":""}>${g==="5/6"?"Grupo 5/6":"Grupo "+g}</option>`).join("")}
+        </select>
+        <button onclick="marcarDescarte(${i})" title="Ez da aprobetxagarria / No aprovechable (enferma)" style="background:none;border:none;color:#e87a7a;font-size:16px;cursor:pointer">&#128465;</button>
+      `}
       <button onclick="eliminarDePropuesta(${i})" style="background:none;border:none;color:#e87a7a;font-size:16px;cursor:pointer">&#10005;</button>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 }
 
 function editarPropuesta(idx, grupo) {
   if(propuestaPendiente[idx]) propuestaPendiente[idx].grupo = grupo;
+}
+
+function marcarDescarte(idx) {
+  if(!propuestaPendiente[idx]) return;
+  propuestaPendiente[idx].grupo = DESCARTE_GRUPO;
+  renderPropuestaLista();
+}
+
+function deshacerDescarte(idx) {
+  if(!propuestaPendiente[idx]) return;
+  propuestaPendiente[idx].grupo = GRUPOS[0];
+  renderPropuestaLista();
 }
 
 function eliminarDePropuesta(idx) {
@@ -1802,7 +1825,11 @@ function confirmarReparto() {
 }
 
 function eliminarReparto(idx) {
-  if(!confirm("Banaketa hau ezabatu? / ¿Eliminar este reparto?")) return;
+  const esDescarte = repartos[idx] && repartos[idx].grupo === DESCARTE_GRUPO;
+  const msg = esDescarte
+    ? "Ez aprobetxagarri gisa markatutako hau ezabatu? / ¿Eliminar esta marca de no aprovechable?"
+    : "Banaketa hau ezabatu? / ¿Eliminar este reparto?";
+  if(!confirm(msg)) return;
   repartos.splice(idx, 1);
   withSave(()=>saveRepartos());
   renderGruposAdmin();
