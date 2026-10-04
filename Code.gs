@@ -3,11 +3,15 @@ var ADMIN_PIN = "fielatogestioa";
 // El grupo "5/6" (con barra) hace que Sheets lo confunda con una fecha, y esto
 // pasa incluso escribiendolo como formula de texto si hay mas de uno en la
 // misma escritura: la "limpieza automatica de datos" de Sheets "corrige" todas
-// las celdas menos la primera, por mucho que el valor ya sea texto literal. La
-// solucion robusta es no usar nunca "/" para el grupo DENTRO de la hoja: se
-// guarda como "5-6" (con guion, que Sheets no confunde con nada) y se vuelve a
-// mostrar como "5/6" al leer, de forma transparente para la app.
+// las celdas menos la primera, por mucho que el valor ya sea texto literal.
+// Cambiar la barra por un guion ("5-6") TAMPOCO basta: Sheets tambien
+// reconoce "5-6" como fecha corta (dia-mes del año actual). La proteccion de
+// verdad es anteponer una letra ("G5/6"): ninguna fecha empieza asi, asi que
+// Sheets no tiene forma de confundirlo con nada y lo guarda como texto plano
+// sin mas. Se quita esa "G" de nuevo al leer, de forma transparente para la
+// app (que nunca llega a ver "G5/6", solo "5/6" como siempre).
 var COLUMNAS_GRUPO = { "Repartos": 2, "Miembros": 3 };
+var PREFIJO_GRUPO = "G";
 
 function protegerGrupo(sheetName, values) {
   var colIdx = COLUMNAS_GRUPO[sheetName];
@@ -16,7 +20,7 @@ function protegerGrupo(sheetName, values) {
     var copia = row.slice();
     var v = copia[colIdx];
     if (typeof v === "string" && /^\d{1,2}\/\d{1,2}$/.test(v)) {
-      copia[colIdx] = v.replace("/", "-");
+      copia[colIdx] = PREFIJO_GRUPO + v;
     }
     return copia;
   });
@@ -28,8 +32,8 @@ function restaurarGrupo(sheetName, data) {
   return data.map(function(row) {
     var copia = row.slice();
     var v = copia[colIdx];
-    if (typeof v === "string" && /^\d{1,2}-\d{1,2}$/.test(v)) {
-      copia[colIdx] = v.replace("-", "/");
+    if (typeof v === "string" && v.indexOf(PREFIJO_GRUPO) === 0 && /^\d{1,2}\/\d{1,2}$/.test(v.slice(PREFIJO_GRUPO.length))) {
+      copia[colIdx] = v.slice(PREFIJO_GRUPO.length);
     }
     return copia;
   });
