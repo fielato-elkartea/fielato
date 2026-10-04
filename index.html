@@ -315,12 +315,19 @@ const WEEKENDS = {
   jul:{}
 };
 
+// Detecta el mes de temporada actual a partir de la fecha real, para que
+// Asistencia y Piezas se abran ya en el mes en curso en vez de siempre en sep.
+function mesActualDetectado() {
+  const idsPorMesJs = {8:"sep",9:"oct",10:"nov",11:"dic",0:"ene",1:"feb",2:"mar",6:"jul"};
+  return idsPorMesJs[new Date().getMonth()] || "sep";
+}
+
 // STATE
 let miembros = [];
 let calendario = JSON.parse(JSON.stringify(WEEKENDS));
 let cuotaBase = 750, cuotaFija = 75;
-let mesActivo = "sep", fechaActiva = null;
-let mesActivo2 = "sep"; // piezas tab
+let mesActivo = mesActualDetectado(), fechaActiva = null;
+let mesActivo2 = mesActualDetectado(); // piezas tab
 let filtroTipo = "TODOS";
 let filtroMiembro = "TODOS";
 let gruposPiezas = {};
@@ -1552,6 +1559,14 @@ function renderGruposAdmin(){
   Object.entries(calendario).forEach(([mes,fechas])=>{
     Object.keys(fechas).sort().forEach(f=>todasFechas.push({mes,fecha:cleanDate(f)}));
   });
+  const fechasConEstado = todasFechas.map(b=>{
+    const {faltanJab,faltanCor}=pendientesPorFecha(b.fecha);
+    return {...b, faltanJab, faltanCor, pendiente: faltanJab>0||faltanCor>0};
+  });
+  if(repartoFecha===null) {
+    const siguiente = fechasConEstado.find(f=>f.pendiente);
+    if(siguiente) repartoFecha = siguiente.fecha;
+  }
 
   let html=`
   <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
@@ -1589,9 +1604,9 @@ function renderGruposAdmin(){
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
       <div style="display:flex;flex-direction:column;gap:4px">
         <label style="font-size:11px;color:#4a7a5a">Batidaren data / Fecha batida</label>
-        <select id="reparto-fecha" class="input" style="width:160px" onchange="actualizarTotalesFecha()">
+        <select id="reparto-fecha" class="input" style="width:230px" onchange="repartoFecha=this.value;actualizarTotalesFecha()">
           <option value="">Aukeratu... / Seleccionar...</option>
-          ${todasFechas.map(b=>`<option value="${b.fecha}">${fmtDia(b.fecha)} ${diaAbr(b.fecha)}</option>`).join("")}
+          ${fechasConEstado.map(b=>`<option value="${b.fecha}" ${b.fecha===repartoFecha?"selected":""}>${b.pendiente?"&#128992; ":""}${fmtDia(b.fecha)} ${diaAbr(b.fecha)}${b.pendiente?` — ${b.faltanJab+b.faltanCor} gabe/pendiente`:""}</option>`).join("")}
         </select>
       </div>
       <div id="totales-fecha-display" style="display:none;background:#0a1208;border:1px solid #1a3020;border-radius:8px;padding:10px 16px">
@@ -1693,6 +1708,7 @@ function renderGruposAdmin(){
   }).join("")}`;
 
   document.getElementById("tab-grupos").innerHTML=html;
+  if(repartoFecha) actualizarTotalesFecha();
 }
 
 let propuestaPendiente = [];
@@ -1711,6 +1727,15 @@ function totalesPiezasFecha(fecha) {
     });
   });
   return {jab, cor};
+}
+
+// Cuantas piezas de esta fecha faltan por repartir (capturadas - ya repartidas,
+// contando tambien los "descarte" como resueltos, igual que en calcularTurno).
+function pendientesPorFecha(fecha) {
+  const {jab, cor} = totalesPiezasFecha(fecha);
+  const yaJab = repartos.filter(r=>r.fecha===cleanDate(fecha)&&r.especie==="jabali").length;
+  const yaCor = repartos.filter(r=>r.fecha===cleanDate(fecha)&&r.especie==="corzo").length;
+  return {faltanJab: Math.max(0, jab-yaJab), faltanCor: Math.max(0, cor-yaCor)};
 }
 
 function actualizarTotalesFecha() {
@@ -1823,6 +1848,7 @@ function confirmarReparto() {
   const n = propuestaPendiente.length;
   propuestaPendiente=[];
   withSave(()=>saveRepartos());
+  repartoFecha = null; // tras confirmar, saltar automaticamente a la siguiente fecha pendiente
   setTimeout(()=>renderGruposAdmin(), 400);
 }
 
