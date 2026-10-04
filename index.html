@@ -354,6 +354,7 @@ let jornadasCerradas = {}; // {fecha: true} -- jornadas ya validadas/cerradas (b
 function cleanDate(f) { if(!f)return f; return String(f).length>10?String(f).substring(0,10):String(f); }
 function fmtDia(f) { const c=cleanDate(f); return c?c.slice(8,10)+"/"+c.slice(5,7):c; }
 function fmtDiaAnio(f) { const c=cleanDate(f); return c?c.slice(8,10)+"/"+c.slice(5,7)+"/"+c.slice(0,4):c; }
+function hoyISO() { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function escHtml(s) { return String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
 // ── SHEETS API ──
@@ -1563,10 +1564,20 @@ function renderGruposAdmin(){
     const {faltanJab,faltanCor}=pendientesPorFecha(b.fecha);
     return {...b, faltanJab, faltanCor, pendiente: faltanJab>0||faltanCor>0};
   });
-  if(repartoFecha===null) {
-    const siguiente = fechasConEstado.find(f=>f.pendiente);
-    if(siguiente) repartoFecha = siguiente.fecha;
+  // Si no hay ninguna fecha con piezas pendientes de repartir, recomendamos
+  // igualmente una fecha: la siguiente batida programada (hoy o en el futuro),
+  // o si no queda ninguna futura, la ultima pasada. Asi el desplegable siempre
+  // señala una fecha util en vez de dejar al admin buscando entre decenas.
+  const hoy = hoyISO();
+  const pendienteTemprana = fechasConEstado.find(f=>f.pendiente);
+  let fechaRecomendada = null;
+  if(pendienteTemprana) {
+    fechaRecomendada = pendienteTemprana.fecha;
+  } else if(fechasConEstado.length) {
+    const futura = fechasConEstado.find(f=>f.fecha>=hoy);
+    fechaRecomendada = futura ? futura.fecha : fechasConEstado[fechasConEstado.length-1].fecha;
   }
+  if(repartoFecha===null) repartoFecha = fechaRecomendada;
 
   let html=`
   <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
@@ -1606,7 +1617,14 @@ function renderGruposAdmin(){
         <label style="font-size:11px;color:#4a7a5a">Batidaren data / Fecha batida</label>
         <select id="reparto-fecha" class="input" style="width:230px" onchange="repartoFecha=this.value;actualizarTotalesFecha()">
           <option value="">Aukeratu... / Seleccionar...</option>
-          ${fechasConEstado.map(b=>`<option value="${b.fecha}" ${b.fecha===repartoFecha?"selected":""}>${b.pendiente?"&#128992; ":""}${fmtDia(b.fecha)} ${diaAbr(b.fecha)}${b.pendiente?` — ${b.faltanJab+b.faltanCor} gabe/pendiente`:""}</option>`).join("")}
+          ${fechasConEstado.map(b=>{
+            const esRecomendada = !b.pendiente && b.fecha===fechaRecomendada;
+            const marcador = b.pendiente ? "&#128992; " : (esRecomendada ? "&#128205; " : "");
+            let sufijo = "";
+            if(b.pendiente) sufijo = ` — ${b.faltanJab+b.faltanCor} gabe/pendiente`;
+            else if(esRecomendada) sufijo = b.fecha===hoy ? " — gaur/hoy" : (b.fecha>hoy ? " — hurrengoa/próxima" : " — azkena/última");
+            return `<option value="${b.fecha}" ${b.fecha===repartoFecha?"selected":""}>${marcador}${fmtDia(b.fecha)} ${diaAbr(b.fecha)}${sufijo}</option>`;
+          }).join("")}
         </select>
       </div>
       <div id="totales-fecha-display" style="display:none;background:#0a1208;border:1px solid #1a3020;border-radius:8px;padding:10px 16px">
