@@ -326,6 +326,7 @@ let filtroMiembro = "TODOS";
 let gruposPiezas = {};
 let repartos = []; // [{fecha, especie, grupo}]
 let repartosHistExpandido = false;
+let repartosHistTodos = false;
 let tarjetas = {}; // {1: "miembroId" | "ZUBIETA" | "", 2: ..., ... 15: ...}
 let socioTabActual = "buscar";
 let socioSeleccionado = null;
@@ -1157,13 +1158,14 @@ function renderSocioGrupos(el) {
 
   <!-- Historial de repartos -->
   <div class="card" style="margin-bottom:20px">
-    <button onclick="repartosHistExpandido=!repartosHistExpandido;renderSocioTab()" style="background:none;border:none;color:inherit;width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center">
+    <button onclick="repartosHistExpandido=!repartosHistExpandido;if(!repartosHistExpandido)repartosHistTodos=false;renderSocioTab()" style="background:none;border:none;color:inherit;width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:11px;color:#4a7a5a;letter-spacing:2px;text-transform:uppercase">Banaketen historia / Historial de repartos</span>
       <span style="color:#4caf70;font-size:18px">${repartosHistExpandido?"&#8722;":"&#43;"}</span>
     </button>
     ${repartosHistExpandido?(()=>{
-      const lista=[...repartos].sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,6);
-      if(!lista.length) return '<div style="color:#2a4a2a;font-size:13px;margin-top:12px">Ez dago banaketarik oraindik / Sin repartos todavia</div>';
+      const ordenados=[...repartos].sort((a,b)=>b.fecha.localeCompare(a.fecha));
+      if(!ordenados.length) return '<div style="color:#2a4a2a;font-size:13px;margin-top:12px">Ez dago banaketarik oraindik / Sin repartos todavia</div>';
+      const lista = repartosHistTodos ? ordenados : ordenados.slice(0,10);
       return `<div style="margin-top:12px;border-top:1px solid #1a3020;padding-top:10px">
         ${lista.map(r=>{
           const esJabali=String(r.especie||"").toLowerCase()==="jabali";
@@ -1174,6 +1176,7 @@ function renderSocioGrupos(el) {
             <span style="color:${color};font-weight:700;font-size:13px">Grupo ${r.grupo}</span>
           </div>`;
         }).join("")}
+        ${!repartosHistTodos && ordenados.length>10?`<button onclick="repartosHistTodos=true;renderSocioTab()" style="width:100%;background:none;border:none;color:#4caf70;font-size:12px;font-weight:600;padding:10px 0 2px;text-align:center">Guztiak ikusi / Ver todos (${ordenados.length})</button>`:""}
       </div>`;
     })():""}
   </div>
