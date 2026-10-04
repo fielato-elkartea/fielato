@@ -1173,7 +1173,7 @@ function renderSocioGrupos(el) {
           return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #0d1a10">
             <span style="font-size:18px">${esJabali?"&#128023;":"&#129420;"}</span>
             <span style="flex:1;color:#9abb9a;font-size:12px">${fmtDiaAnio(r.fecha)}</span>
-            <span style="color:${r.grupo===DESCARTE_GRUPO?"#e87a7a":color};font-weight:700;font-size:13px">${r.grupo===DESCARTE_GRUPO?"&#128465; Ez aprobetxagarria / No aprovechable":"Grupo "+r.grupo}</span>
+            <span style="color:${r.grupo===DESCARTE_GRUPO?"#e87a7a":color};font-weight:700;font-size:13px;white-space:nowrap;flex-shrink:0">${r.grupo===DESCARTE_GRUPO?"&#128465; Baztertua / Descartada":"Grupo "+r.grupo}</span>
           </div>`;
         }).join("")}
         ${!repartosHistTodos && ordenados.length>10?`<button onclick="repartosHistTodos=true;renderSocioTab()" style="width:100%;background:none;border:none;color:#4caf70;font-size:12px;font-weight:600;padding:10px 0 2px;text-align:center">Guztiak ikusi / Ver todos (${ordenados.length})</button>`:""}
@@ -1657,10 +1657,10 @@ function renderGruposAdmin(){
       </tr></thead>
       <tbody>
         ${[...repartos].reverse().map((r,i)=>`<tr style="background:${i%2===0?"#0d1a10":"#0a1208"}">
-          <td style="text-align:left;padding:6px 10px;color:#c8e8c8">${fmtDia(r.fecha)}</td>
-          <td style="${r.especie==="jabali"?"color:#e8a84a":"color:#a8d8e8"};font-weight:600">${r.especie==="jabali"?"&#128023; Basurdea / Jabali":"&#129420; Orkatza / Corzo"}</td>
-          <td style="color:${r.grupo===DESCARTE_GRUPO?"#e87a7a":"#d4e870"};font-weight:700">${r.grupo===DESCARTE_GRUPO?"&#128465; Ez aprobetxagarria / No aprovechable":"Taldea "+r.grupo+" / Grupo "+r.grupo}</td>
-          <td><button onclick="eliminarReparto(${repartos.length-1-i})" style="background:#1a0808;border:1px solid #4a1a1a;color:#e87a7a;border-radius:5px;padding:2px 8px;font-size:11px">&#10005;</button></td>
+          <td style="text-align:left;padding:6px 10px;color:#c8e8c8;white-space:nowrap">${fmtDia(r.fecha)}</td>
+          <td style="${r.especie==="jabali"?"color:#e8a84a":"color:#a8d8e8"};font-weight:600;white-space:nowrap">${r.especie==="jabali"?"&#128023; Basurdea / Jabali":"&#129420; Orkatza / Corzo"}</td>
+          <td style="color:${r.grupo===DESCARTE_GRUPO?"#e87a7a":"#d4e870"};font-weight:700;white-space:nowrap">${r.grupo===DESCARTE_GRUPO?"&#128465; Baztertua / Descartada":"Grupo "+r.grupo}</td>
+          <td style="white-space:nowrap"><button onclick="eliminarReparto(${repartos.length-1-i})" style="background:#1a0808;border:1px solid #4a1a1a;color:#e87a7a;border-radius:5px;padding:2px 8px;font-size:11px">&#10005;</button></td>
         </tr>`).join("")}
       </tbody>
     </table></div>`}
