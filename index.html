@@ -1343,12 +1343,16 @@ function toggleAsist(mid,fecha){
   const m=miembros.find(x=>x.id===mid);if(!m)return;
   if(!m.batidas[mesActivo])m.batidas[mesActivo]={};
   m.batidas[mesActivo][fecha]=!m.batidas[mesActivo][fecha];
-  // Preserve horizontal scroll position
+  // Preserve scroll position (horizontal de la tabla y vertical de la pagina):
+  // sin esto, cada clic recargaba la tabla entera y la pagina saltaba arriba,
+  // haciendo que el siguiente toque cayera sobre una casilla distinta.
   const scrollEl = document.querySelector("#tab-asistencia .overflow-x");
   const scrollLeft = scrollEl ? scrollEl.scrollLeft : 0;
+  const scrollYAntes = window.scrollY;
   renderAsistencia();
   const newScrollEl = document.querySelector("#tab-asistencia .overflow-x");
   if(newScrollEl) newScrollEl.scrollLeft = scrollLeft;
+  window.scrollTo(0, scrollYAntes);
   withSave(()=>saveAsistencia());
 }
 
