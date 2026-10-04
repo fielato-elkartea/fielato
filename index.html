@@ -1135,10 +1135,10 @@ function renderSocioGrupos(el) {
     <table>
       <thead><tr>
         <th style="text-align:left;padding:6px 4px">Grupo</th>
-        <th style="color:#e8a84a;white-space:nowrap;padding:6px 4px">&#128023;</th>
-        <th style="color:#a8d8e8;white-space:nowrap;padding:6px 4px">&#129420;</th>
-        <th style="white-space:nowrap;padding:6px 3px;font-size:9px">Cuota &#128023;</th>
-        <th style="white-space:nowrap;padding:6px 3px;font-size:9px">Cuota &#129420;</th>
+        <th style="color:#e8a84a;white-space:nowrap;padding:4px;font-size:18px">&#128023;</th>
+        <th style="color:#a8d8e8;white-space:nowrap;padding:4px;font-size:18px">&#129420;</th>
+        <th style="white-space:nowrap;padding:6px 3px;font-size:8px;opacity:.75">Cuota &#128023;</th>
+        <th style="white-space:nowrap;padding:6px 3px;font-size:8px;opacity:.75">Cuota &#129420;</th>
       </tr></thead>
       <tbody>
         ${GRUPOS.map((g,i)=>`
@@ -1148,10 +1148,10 @@ function renderSocioGrupos(el) {
               ${g===jabNext?'<span style="background:#3a2a10;color:#e8a84a;border-radius:4px;padding:1px 4px;font-size:9px;margin-left:3px">JAB</span>':""}
               ${g===corNext?'<span style="background:#0a1828;color:#a8d8e8;border-radius:4px;padding:1px 4px;font-size:9px;margin-left:3px">COR</span>':""}
             </td>
-            <td style="color:#e8a84a;font-weight:700;font-size:14px;padding:5px 4px">${jab[g]||0}</td>
-            <td style="color:#a8d8e8;font-weight:700;font-size:14px;padding:5px 4px">${cor[g]||0}</td>
-            <td style="color:#4a7a5a;font-size:11px;padding:5px 4px">${CUOTA[g][0]}</td>
-            <td style="color:#4a7a5a;font-size:11px;padding:5px 4px">${CUOTA[g][1]}</td>
+            <td style="color:#e8a84a;font-weight:800;font-size:17px;padding:5px 4px">${jab[g]||0}</td>
+            <td style="color:#a8d8e8;font-weight:800;font-size:17px;padding:5px 4px">${cor[g]||0}</td>
+            <td style="color:#3a5a45;font-size:10px;padding:5px 4px">${CUOTA[g][0]}</td>
+            <td style="color:#3a5a45;font-size:10px;padding:5px 4px">${CUOTA[g][1]}</td>
           </tr>`).join("")}
       </tbody>
     </table>
