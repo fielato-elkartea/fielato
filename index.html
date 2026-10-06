@@ -294,10 +294,14 @@ const MESES = [
   {id:"jul",label:"Julio",eu:"Julio",abbr:"JUL"},
 ];
 
-// Grupos de caza en orden
-const GRUPOS = ["1","2","3","4","5/6","7"];
+// Grupos de caza en orden. "Zubieta" no es un grupo de rotacion propio: es una
+// etiqueta para piezas que se ceden a la otra cuadrilla en batidas conjuntas.
+// Por eso tiene cuota 0 y NO aparece en ORDEN_JAB/ORDEN_COR: nunca se le
+// sugiere automaticamente ni cuenta para la cuota de nuestros grupos, pero si
+// se puede elegir a mano al repartir y se ve en las tablas como referencia.
+const GRUPOS = ["1","2","3","4","5/6","7","Zubieta"];
 // Cuota por grupo: jabali, corzo
-const CUOTA = {"1":[2,2],"2":[2,2],"3":[2,2],"4":[1,1],"5/6":[3,3],"7":[2,2]};
+const CUOTA = {"1":[2,2],"2":[2,2],"3":[2,2],"4":[1,1],"5/6":[3,3],"7":[2,2],"Zubieta":[0,0]};
 // Orden reparto jabali: 1->2->3->4->5/6->7->1
 // Orden reparto corzo: 7->5/6->4->3->2->1->7
 const ORDEN_JAB = ["1","2","3","4","5/6","7"];
