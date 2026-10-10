@@ -252,8 +252,11 @@ td { padding: 5px; border: 1px solid #111a11; text-align: center; }
         <div style="font-size:10px;color:#3a8a4a;letter-spacing:3px;text-transform:uppercase">Admin Fielato 2026-2027</div>
         <div style="font-size:17px;font-weight:700;color:#e8f5e2">Panel de Gestion</div>
       </div>
-      <span id="saving-indicator" style="display:none;color:#4caf70;font-size:12px">Gordetzen... / Guardando...</span>
-      <span id="cola-indicator" style="display:none;color:#e8a84a;font-size:12px;font-weight:600"></span>
+      <!-- Avisos flotantes (position:fixed): si estuvieran dentro de la cabecera,
+           al aparecer/desaparecer en cada guardado cambiaban su altura en el movil
+           y la lista de asistencia subia y bajaba bajo el dedo. -->
+      <span id="saving-indicator" style="display:none;position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:900;pointer-events:none;background:#0d1a10;border:1px solid #2d6a4f;border-radius:20px;padding:6px 14px;color:#4caf70;font-size:12px;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,0.5)">Gordetzen... / Guardando...</span>
+      <span id="cola-indicator" style="display:none;position:fixed;bottom:52px;left:50%;transform:translateX(-50%);z-index:900;pointer-events:none;background:#1a1408;border:1px solid #8a6a2a;border-radius:20px;padding:6px 14px;color:#e8a84a;font-size:12px;font-weight:600;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,0.5)"></span>
       <button onclick="init()" style="background:#0d1a10;border:1px solid #1a3020;color:#4a7a5a;border-radius:8px;padding:5px 12px;font-size:12px">Birkargatu / Recargar</button>
       <button onclick="cerrarSesionAdmin()" style="background:none;border:none;color:#3a6a3a;font-size:11px">Saioa itxi / Cerrar sesión</button>
     </div>
